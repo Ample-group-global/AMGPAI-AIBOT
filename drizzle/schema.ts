@@ -1,4 +1,4 @@
-import { mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -18,4 +18,19 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+// Assessment sessions table
+export const assessmentSessions = mysqlTable("assessmentSessions", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  userId: varchar("userId", { length: 64 }),
+  stage: varchar("stage", { length: 32 }).notNull().default("opening"),
+  conversationCount: int("conversationCount").notNull().default(0),
+  conversationHistory: text("conversationHistory"),
+  scores: text("scores"),
+  result: text("result"),
+  startTime: timestamp("startTime").defaultNow(),
+  completedAt: timestamp("completedAt"),
+  createdAt: timestamp("createdAt").defaultNow(),
+});
+
+export type AssessmentSession = typeof assessmentSessions.$inferSelect;
+export type InsertAssessmentSession = typeof assessmentSessions.$inferInsert;
