@@ -5,6 +5,8 @@ import { Progress } from "@/components/ui/progress";
 import { trpc } from "@/lib/trpc";
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
+import { useLanguage } from "@/contexts/LanguageContext";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -13,6 +15,7 @@ interface Message {
 
 export default function Assessment() {
   const [, setLocation] = useLocation();
+  const { t } = useLanguage();
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -86,13 +89,13 @@ export default function Assessment() {
   };
 
   const stageNames: Record<string, string> = {
-    opening: '開場',
-    risk: '風險評估',
-    goals: '目標與時間',
-    behavior: '行為分析',
-    values: '價值觀探索',
-    confirmation: '確認',
-    complete: '完成'
+    opening: t('assessment.stage.opening'),
+    risk: t('assessment.stage.risk'),
+    goals: t('assessment.stage.goals'),
+    behavior: t('assessment.stage.behavior'),
+    values: t('assessment.stage.values'),
+    confirmation: t('assessment.stage.confirmation'),
+    complete: t('assessment.stage.complete')
   };
 
   return (
@@ -106,10 +109,10 @@ export default function Assessment() {
               onClick={() => setLocation('/')}
               disabled={chatMutation.isPending}
             >
-              ← 返回
+              ← {t('nav.back')}
             </Button>
-            <h1 className="text-lg font-semibold">投資傾向評估</h1>
-            <div className="w-16"></div>
+            <h1 className="text-lg font-semibold">{t('assessment.title')}</h1>
+            <LanguageSwitcher />
           </div>
           
           {/* Progress */}
@@ -146,7 +149,7 @@ export default function Assessment() {
                   </div>
                   <div className="flex-1">
                     <div className="font-semibold text-sm mb-1">
-                      {msg.role === 'assistant' ? '助手' : '你'}
+                      {msg.role === 'assistant' ? t('assessment.assistant') : t('assessment.you')}
                     </div>
                     <p className="whitespace-pre-wrap">{msg.content}</p>
                   </div>
@@ -173,8 +176,8 @@ export default function Assessment() {
           {isComplete && (
             <div className="text-center py-8">
               <div className="text-4xl mb-4">🎉</div>
-              <h3 className="text-xl font-semibold mb-2">評估完成！</h3>
-              <p className="text-gray-600">正在為你生成個人化的投資建議...</p>
+              <h3 className="text-xl font-semibold mb-2">{t('assessment.complete.title')}</h3>
+              <p className="text-gray-600">{t('assessment.complete.subtitle')}</p>
             </div>
           )}
           
@@ -191,7 +194,7 @@ export default function Assessment() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="輸入你的回答..."
+                placeholder={t('assessment.input.placeholder')}
                 disabled={chatMutation.isPending || !sessionId}
                 className="flex-1"
               />
@@ -199,7 +202,7 @@ export default function Assessment() {
                 onClick={handleSend}
                 disabled={!input.trim() || chatMutation.isPending || !sessionId}
               >
-                發送
+                {t('assessment.button.send')}
               </Button>
             </div>
           </div>
