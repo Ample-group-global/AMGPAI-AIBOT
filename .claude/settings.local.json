@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm install:*)",
+      "Bash(pnpm dev)",
+      "Bash(pnpm check:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill /PID 43552 /F)",
+      "Bash(cmd //c \"taskkill /PID 43552 /F\")",
+      "Bash(dotnet build:*)",
+      "Bash(ren:*)",
+      "Bash(ren \"Services\\\\AssessmentDapperService.cs\" \"AmgAssessmentService.cs\")",
+      "Bash(PORT=3000 pnpm dev:*)",
+      "Bash(curl:*)",
+      "Bash(npm run dev)",
+      "Bash(taskkill:*)",
+      "Bash(cmd //c \"taskkill /F /PID 27712\")",
+      "WebSearch",
+      "Bash(nslookup:*)",
+      "Bash(git clone:*)",
+      "WebFetch(domain:open.manus.im)",
+      "Bash(cmd //c \"taskkill /F /PID 30480\")",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}

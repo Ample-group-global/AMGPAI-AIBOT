@@ -20,19 +20,22 @@ export const appRouter = router({
 
   // Assessment router
   assessment: router({
-    // 開始新的評估會話
+    // Start new assessment session
     start: publicProcedure
       .input(z.object({
-        language: z.enum(['zh', 'en']).optional().default('zh')
+        language: z.enum(['zh', 'en']).optional().default('zh'),
+        userId: z.string().optional() // Accept userId from Privy auth
       }).optional())
       .mutation(async ({ ctx, input }) => {
       const { createAssessmentSession } = await import('./assessmentDb');
       const { getOpeningQuestion } = await import('./assessmentEngine');
-      
-      const session = await createAssessmentSession(ctx.user?.id);
+
+      // Use userId from input (Privy) or fallback to ctx.user?.id (session)
+      const userId = input?.userId || ctx.user?.id;
+      const session = await createAssessmentSession(userId);
       const language = input?.language || 'zh';
       const openingQuestion = getOpeningQuestion(language);
-      
+
       return {
         sessionId: session.id,
         question: openingQuestion,

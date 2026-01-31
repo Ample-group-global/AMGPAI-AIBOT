@@ -1,38 +1,51 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import { LanguageProvider } from "./contexts/LanguageContext";
 import Home from "./pages/Home";
-
-import Assessment from "./pages/Assessment";
+import { PAIBotWidget } from "./components/PAIBotWidget";
 import Result from "./pages/Result";
+import NotFound from "./pages/NotFound";
 
 function Router() {
   return (
     <Switch>
+      {/* Landing page */}
       <Route path={"/"} component={Home} />
-      <Route path={"/assessment"} component={Assessment} />
+      {/* Assessment chatbot */}
+      <Route path={"/assessment"} component={AssessmentPage} />
+      {/* Results page */}
       <Route path={"/result/:sessionId"} component={Result} />
-      <Route path={"/404"} component={NotFound} />
+      {/* 404 */}
       <Route component={NotFound} />
     </Switch>
+  );
+}
+
+function AssessmentPage() {
+  return (
+    <PAIBotWidget
+      onClose={() => {
+        // Go back to home page
+        window.location.href = '/';
+      }}
+      onComplete={(sessionId) => {
+        console.log('Assessment completed:', sessionId);
+      }}
+    />
   );
 }
 
 function App() {
   return (
     <ErrorBoundary>
-      <LanguageProvider>
-        <ThemeProvider defaultTheme="light">
-          <TooltipProvider>
-            <Toaster />
-            <Router />
-          </TooltipProvider>
-        </ThemeProvider>
-      </LanguageProvider>
+      <ThemeProvider defaultTheme="light">
+        <TooltipProvider>
+          <Toaster />
+          <Router />
+        </TooltipProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 }
