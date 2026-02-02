@@ -19,7 +19,7 @@ export type FileContent = {
   type: "file_url";
   file_url: {
     url: string;
-    mime_type?: "audio/mpeg" | "audio/wav" | "application/pdf" | "audio/mp4" | "video/mp4";
+    mime_type?: "audio/mpeg" | "audio/wav" | "application/pdf" | "audio/mp4" | "video/mp4" ;
   };
 };
 
@@ -209,63 +209,14 @@ const normalizeToolChoice = (
   return toolChoice;
 };
 
-// API 優先順序: Gemini > Claude > Forge
-type ApiProvider = "gemini" | "claude" | "forge";
-
-const getActiveProvider = (): ApiProvider => {
-  if (ENV.geminiApiKey) return "gemini";
-  if (ENV.claudeApiKey) return "claude";
-  return "forge";
-};
-
-const resolveApiUrl = () => {
-  const provider = getActiveProvider();
-
-  switch (provider) {
-    case "gemini":
-      return `${ENV.geminiApiUrl.replace(/\/$/, "")}/chat/completions`;
-    case "claude":
-      return `${ENV.claudeApiUrl.replace(/\/$/, "")}/v1/messages`;
-    case "forge":
-    default:
-      if (ENV.forgeApiUrl && ENV.forgeApiUrl.trim().length > 0) {
-        return `${ENV.forgeApiUrl.replace(/\/$/, "")}/v1/chat/completions`;
-      }
-      return "https://forge.manus.im/v1/chat/completions";
-  }
-};
-
-const getApiKey = () => {
-  const provider = getActiveProvider();
-
-  switch (provider) {
-    case "gemini":
-      return ENV.geminiApiKey;
-    case "claude":
-      return ENV.claudeApiKey;
-    case "forge":
-    default:
-      return ENV.forgeApiKey;
-  }
-};
-
-const getModelName = () => {
-  const provider = getActiveProvider();
-
-  switch (provider) {
-    case "gemini":
-      return "gemini-2.0-flash";
-    case "claude":
-      return "claude-sonnet-4-20250514";
-    case "forge":
-    default:
-      return "gemini-2.0-flash";
-  }
-};
+const resolveApiUrl = () =>
+  ENV.forgeApiUrl && ENV.forgeApiUrl.trim().length > 0
+    ? `${ENV.forgeApiUrl.replace(/\/$/, "")}/v1/chat/completions`
+    : "https://forge.manus.im/v1/chat/completions";
 
 const assertApiKey = () => {
-  if (!ENV.geminiApiKey && !ENV.claudeApiKey && !ENV.forgeApiKey) {
-    throw new Error("GEMINI_API_KEY, ANTHROPIC_API_KEY, or OPENAI_API_KEY is not configured");
+  if (!ENV.forgeApiKey) {
+    throw new Error("OPENAI_API_KEY is not configured");
   }
 };
 
@@ -329,7 +280,7 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
   } = params;
 
   const payload: Record<string, unknown> = {
-    model: getModelName(),
+    model: "gemini-2.5-flash",
     messages: messages.map(normalizeMessage),
   };
 
@@ -346,10 +297,9 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
   }
 
   payload.max_tokens = 32768
-  // Note: thinking parameter is Claude-specific, not supported by Gemini
-  // payload.thinking = {
-  //   "budget_tokens": 128
-  // }
+  payload.thinking = {
+    "budget_tokens": 128
+  }
 
   const normalizedResponseFormat = normalizeResponseFormat({
     responseFormat,
@@ -362,49 +312,21 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
     payload.response_format = normalizedResponseFormat;
   }
 
-  // 重試邏輯 - 最多重試 3 次
-  const maxRetries = 3;
-  let lastError: Error | null = null;
+  const response = await fetch(resolveApiUrl(), {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${ENV.forgeApiKey}`,
+    },
+    body: JSON.stringify(payload),
+  });
 
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      const response = await fetch(resolveApiUrl(), {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          authorization: `Bearer ${getApiKey()}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (response.ok) {
-        return (await response.json()) as InvokeResult;
-      }
-
-      const errorText = await response.text();
-
-      // 如果是 429 (TooManyRequests)，等待後重試
-      if (response.status === 429) {
-        const waitTime = Math.pow(2, attempt) * 1000; // 1s, 2s, 4s
-        console.log(`[LLM] Rate limited. Waiting ${waitTime}ms before retry ${attempt + 1}/${maxRetries}...`);
-        await new Promise(resolve => setTimeout(resolve, waitTime));
-        lastError = new Error(`LLM rate limited: ${response.status} – ${errorText}`);
-        continue;
-      }
-
-      // 其他錯誤直接拋出
-      throw new Error(
-        `LLM invoke failed: ${response.status} ${response.statusText} – ${errorText}`
-      );
-    } catch (error) {
-      if (error instanceof Error && error.message.includes("rate limited")) {
-        lastError = error;
-        continue;
-      }
-      throw error;
-    }
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(
+      `LLM invoke failed: ${response.status} ${response.statusText} – ${errorText}`
+    );
   }
 
-  // 所有重試都失敗
-  throw lastError || new Error("LLM invoke failed after all retries");
+  return (await response.json()) as InvokeResult;
 }
