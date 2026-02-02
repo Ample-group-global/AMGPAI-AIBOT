@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useRouter, useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { SDG_NAMES } from '@/data/investmentTracks';
 import { defaultConfig } from '@/config';
 import { useMasterData } from '@/contexts/MasterDataContext';
 
@@ -148,15 +147,13 @@ export default function ResultPage() {
 
   const { investorProfile, scores, recommendedTracks, sdgAlignment } = result;
 
-  // Use SDG definitions from API if available, fallback to hardcoded
-  const sdgNames = Object.keys(sdgDefinitions).length > 0
-    ? Object.fromEntries(
-        Object.entries(sdgDefinitions).map(([id, sdg]) => [
-          parseInt(id),
-          { name: sdg.name, nameEn: sdg.nameEn, icon: sdg.icon }
-        ])
-      )
-    : SDG_NAMES;
+  // Use SDG definitions from API
+  const sdgNames = Object.fromEntries(
+    Object.entries(sdgDefinitions).map(([id, sdg]) => [
+      parseInt(id),
+      { name: sdg.name, nameEn: sdg.nameEn, icon: sdg.icon }
+    ])
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
