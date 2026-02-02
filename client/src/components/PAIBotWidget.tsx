@@ -201,7 +201,7 @@ function isTokenExpired(token: string): boolean {
 
 // ============ Component ============
 
-export interface PAIBotWidgetProps extends Partial<PAIBotConfig> {}
+export interface PAIBotWidgetProps extends Partial<PAIBotConfig> { }
 
 export function PAIBotWidget(props: PAIBotWidgetProps) {
   const config = { ...defaultConfig, ...props };
@@ -225,9 +225,10 @@ export function PAIBotWidget(props: PAIBotWidgetProps) {
   const [showCloseDialog, setShowCloseDialog] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const isAuthenticated = !!user && !!token;
+  // For local testing: skip auth check and use guest mode
+  const isAuthenticated = true; // Always authenticated for testing
 
-  // Initialize auth state from localStorage
+  // Initialize - auto-set guest user for local testing
   useEffect(() => {
     const storedToken = localStorage.getItem(AUTH_TOKEN_KEY);
     const storedUser = localStorage.getItem(AUTH_USER_KEY);
@@ -235,13 +236,12 @@ export function PAIBotWidget(props: PAIBotWidgetProps) {
     if (storedToken && storedUser && !isTokenExpired(storedToken)) {
       setToken(storedToken);
       setUser(JSON.parse(storedUser));
-      setIsLoading(false);
     } else {
-      // Not logged in - redirect to home page for login
-      localStorage.removeItem(AUTH_TOKEN_KEY);
-      localStorage.removeItem(AUTH_USER_KEY);
-      window.location.href = '/';
+      // Use guest mode for local testing
+      setUser({ userId: 'guest-user', role: 'guest' });
+      setToken('guest-token');
     }
+    setIsLoading(false);
   }, []);
 
   // Start assessment when authenticated
@@ -354,10 +354,10 @@ export function PAIBotWidget(props: PAIBotWidgetProps) {
     );
   }
 
-  // Don't render if not authenticated
-  if (!isAuthenticated) {
-    return null;
-  }
+  // Skip auth check for local testing
+  // if (!isAuthenticated) {
+  //   return null;
+  // }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -396,17 +396,15 @@ export function PAIBotWidget(props: PAIBotWidgetProps) {
                 <div className="flex rounded-lg border overflow-hidden">
                   <button
                     onClick={() => setLanguage('zh')}
-                    className={`px-3 py-1.5 text-sm font-medium transition-colors ${
-                      language === 'zh' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'
-                    }`}
+                    className={`px-3 py-1.5 text-sm font-medium transition-colors ${language === 'zh' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'
+                      }`}
                   >
                     {t.langSwitch.zh}
                   </button>
                   <button
                     onClick={() => setLanguage('en')}
-                    className={`px-3 py-1.5 text-sm font-medium transition-colors ${
-                      language === 'en' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'
-                    }`}
+                    className={`px-3 py-1.5 text-sm font-medium transition-colors ${language === 'en' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'
+                      }`}
                   >
                     {t.langSwitch.en}
                   </button>
