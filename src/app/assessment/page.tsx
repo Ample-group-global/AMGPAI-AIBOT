@@ -17,7 +17,6 @@ import { defaultConfig } from '@/config';
 import { useMasterData } from '@/contexts/MasterDataContext';
 import { DynamicIcon } from '@/components/DynamicIcon';
 
-// ============ Icons ============
 
 const ArrowLeftIcon = () => (
   <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -43,7 +42,6 @@ const ChevronDownIcon = () => (
   </svg>
 );
 
-// ============ Types ============
 
 interface Message {
   role: 'user' | 'assistant';
@@ -76,8 +74,6 @@ interface ChatResponse {
   isComplete: boolean;
 }
 
-// ============ API Functions ============
-
 async function apiCall<T>(url: string, options?: RequestInit): Promise<ApiResponse<T>> {
   try {
     const response = await fetch(url, {
@@ -105,7 +101,7 @@ async function sendChat(apiUrl: string, sessionId: string, message: string, lang
   });
 }
 
-// ============ Auth Helpers ============
+
 
 const AUTH_TOKEN_KEY = 'paibot_jwt_token';
 const AUTH_USER_KEY = 'paibot_user';
@@ -129,7 +125,6 @@ function isTokenExpired(token: string): boolean {
   return Date.now() >= payload.exp * 1000;
 }
 
-// ============ Component ============
 
 export default function AssessmentPage() {
   const router = useRouter();
@@ -140,12 +135,10 @@ export default function AssessmentPage() {
     return stages[stageKey]?.name || stageKey;
   };
 
-  // Auth state
+
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  // Chat state
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -159,10 +152,8 @@ export default function AssessmentPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-
   const isAuthenticated = !!user && !!token;
 
-  // Scroll detection
   const handleScroll = useCallback(() => {
     if (chatContainerRef.current) {
       const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current;
@@ -226,7 +217,6 @@ export default function AssessmentPage() {
     localStorage.removeItem(AUTH_USER_KEY);
     config.onLogout?.();
   };
-
   const handleSend = async () => {
     if (!input.trim() || !sessionId || isSending) return;
 
@@ -266,30 +256,24 @@ export default function AssessmentPage() {
       setIsSending(false);
     }
   };
-
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
   };
-
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
     e.target.style.height = 'auto';
     e.target.style.height = Math.min(e.target.scrollHeight, 150) + 'px';
   };
-
   const handleClose = () => setShowCloseDialog(true);
-
   const handleConfirmClose = () => {
     logout();
     setShowCloseDialog(false);
     config.onClose?.();
     router.push('/');
   };
-
-  // Loading state
   if (isLoading || isMasterDataLoading) {
     return (
       <div className="min-h-screen bg-[#0a1628] flex items-center justify-center">
@@ -307,15 +291,11 @@ export default function AssessmentPage() {
       </div>
     );
   }
-
   if (!isAuthenticated) {
     return null;
   }
-
   return (
     <div className="min-h-screen bg-[#0a1628] flex flex-col relative">
-
-      {/* Close Dialog */}
       <AlertDialog open={showCloseDialog} onOpenChange={setShowCloseDialog}>
         <AlertDialogContent className="bg-gradient-to-br from-[#1a2744] to-[#0a1628] border-[#334155] text-white max-w-sm">
           <AlertDialogHeader>
@@ -339,8 +319,6 @@ export default function AssessmentPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Header */}
       <header className="border-b border-white/5 bg-[#0a1628]/90 backdrop-blur-2xl sticky top-0 z-20">
         <div className="container py-3">
           <div className="flex items-center justify-between">
@@ -368,8 +346,8 @@ export default function AssessmentPage() {
                     key={lang.code}
                     onClick={() => setLanguage(lang.code)}
                     className={`px-3 text-sm font-medium transition-all duration-300 ${language === lang.code
-                        ? 'bg-gradient-to-r from-[#c9a962] to-[#d4b87a] text-[#0a1628]'
-                        : 'text-gray-400 hover:text-white hover:bg-white/5'
+                      ? 'bg-gradient-to-r from-[#c9a962] to-[#d4b87a] text-[#0a1628]'
+                      : 'text-gray-400 hover:text-white hover:bg-white/5'
                       }`}
                   >
                     {lang.code === 'zh' ? '中文' : lang.code.toUpperCase()}
@@ -378,8 +356,6 @@ export default function AssessmentPage() {
               </div>
             )}
           </div>
-
-          {/* Progress Section */}
           <div className="mt-3 flex items-center gap-3">
             <div className="flex-1">
               <div className="flex items-center justify-between mb-1.5">
@@ -396,22 +372,18 @@ export default function AssessmentPage() {
           </div>
         </div>
       </header>
-
-      {/* Chat Area */}
       <main
         ref={chatContainerRef}
         onScroll={handleScroll}
         className="flex-1 overflow-y-auto relative z-10"
       >
         <div className="container max-w-3xl py-4">
-          {/* Messages */}
           <div className="space-y-4">
             {messages.map((msg, idx) => (
               <div
                 key={idx}
                 className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
               >
-                {/* Avatar */}
                 <div className="flex-shrink-0">
                   {msg.role === 'assistant' ? (
                     <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#c9a962] to-[#d4b87a] flex items-center justify-center shadow-md">
@@ -423,13 +395,11 @@ export default function AssessmentPage() {
                     </div>
                   )}
                 </div>
-
-                {/* Message Bubble */}
                 <div className={`max-w-[80%] ${msg.role === 'user' ? 'text-right' : ''}`}>
                   <div
                     className={`inline-block px-4 py-3 rounded-2xl ${msg.role === 'user'
-                        ? 'bg-gradient-to-br from-[#c9a962] to-[#d4b87a] text-[#0a1628] rounded-br-md'
-                        : 'bg-[#1a2744] text-gray-100 border border-[#334155]/50 rounded-bl-md'
+                      ? 'bg-gradient-to-br from-[#c9a962] to-[#d4b87a] text-[#0a1628] rounded-br-md'
+                      : 'bg-[#1a2744] text-gray-100 border border-[#334155]/50 rounded-bl-md'
                       }`}
                   >
                     <p className="whitespace-pre-wrap leading-relaxed text-[15px]">{msg.content}</p>
@@ -437,8 +407,6 @@ export default function AssessmentPage() {
                 </div>
               </div>
             ))}
-
-            {/* Typing Indicator */}
             {isSending && (
               <div className="flex gap-3">
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#c9a962] to-[#d4b87a] flex items-center justify-center shadow-md">
@@ -453,8 +421,6 @@ export default function AssessmentPage() {
                 </div>
               </div>
             )}
-
-            {/* Completion State */}
             {isComplete && (
               <div className="text-center py-10">
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#c9a962] to-[#d4b87a] flex items-center justify-center">
@@ -468,8 +434,6 @@ export default function AssessmentPage() {
             <div ref={messagesEndRef} className="h-32" />
           </div>
         </div>
-
-        {/* Scroll to Bottom Button */}
         {showScrollButton && (
           <button
             onClick={scrollToBottom}
@@ -479,8 +443,6 @@ export default function AssessmentPage() {
           </button>
         )}
       </main>
-
-      {/* Input Area */}
       {!isComplete && (
         <div className="sticky bottom-0 z-20 border-t border-[#1a2744] bg-[#0a1628]">
           <div className="container max-w-3xl py-3">

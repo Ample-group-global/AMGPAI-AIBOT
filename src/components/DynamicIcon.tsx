@@ -78,7 +78,5 @@ export function DynamicIcon({ name, className = '', size = 24 }: DynamicIconProp
   if (IconComponent) {
     return <IconComponent className={className} size={size} />;
   }
-
-  // Fallback: if it's an emoji or text, just render it
   return <span className={className}>{name}</span>;
 }

@@ -38,7 +38,6 @@ export function MasterDataProvider({ children }: MasterDataProviderProps) {
       const data = await paibotApi.getMasterData(lang);
       if (data) {
         setMasterData(data);
-        // Update language from config if this is initial load
         if (data.config?.defaultLanguage && lang === 'zh') {
           setLanguageState(data.config.defaultLanguage);
         }

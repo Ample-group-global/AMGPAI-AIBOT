@@ -7,8 +7,6 @@ import { useState, useEffect } from 'react';
 import { defaultConfig } from '@/config';
 import { useMasterData } from '@/contexts/MasterDataContext';
 
-// ============ Types ============
-
 interface ApiResponse<T> {
   success: boolean;
   message?: string;
@@ -53,8 +51,6 @@ interface AssessmentResult {
   };
 }
 
-// ============ API Functions ============
-
 async function getResult(apiUrl: string, sessionId: string): Promise<ApiResponse<AssessmentResult>> {
   try {
     const response = await fetch(`${apiUrl}/GetResult/${sessionId}`, {
@@ -67,8 +63,6 @@ async function getResult(apiUrl: string, sessionId: string): Promise<ApiResponse
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
-
-// ============ Component ============
 
 export default function ResultPage() {
   const params = useParams<{ sessionId: string }>();
@@ -111,9 +105,8 @@ export default function ResultPage() {
         <button
           key={lang.code}
           onClick={() => setLanguage(lang.code)}
-          className={`px-3 py-1.5 text-sm font-medium transition-colors ${
-            language === lang.code ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'
-          }`}
+          className={`px-3 py-1.5 text-sm font-medium transition-colors ${language === lang.code ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'
+            }`}
         >
           {lang.code === 'zh' ? '中文' : lang.code.toUpperCase()}
         </button>
@@ -146,8 +139,6 @@ export default function ResultPage() {
   }
 
   const { investorProfile, scores, recommendedTracks, sdgAlignment } = result;
-
-  // Use SDG definitions from API
   const sdgNames = Object.fromEntries(
     Object.entries(sdgDefinitions).map(([id, sdg]) => [
       parseInt(id),
@@ -157,7 +148,6 @@ export default function ResultPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      {/* Header */}
       <header className="border-b bg-white/80 backdrop-blur-sm">
         <div className="container py-4">
           <div className="flex items-center justify-between">
@@ -173,7 +163,6 @@ export default function ResultPage() {
       </header>
 
       <main className="container py-8 max-w-5xl space-y-8">
-        {/* Investor Profile */}
         <Card className="p-8 bg-gradient-to-r from-blue-600 to-blue-700 text-white">
           <div className="space-y-4">
             <div className="flex items-center gap-3">
@@ -185,8 +174,6 @@ export default function ResultPage() {
             </div>
           </div>
         </Card>
-
-        {/* Scores Overview */}
         <div className="grid md:grid-cols-2 gap-6">
           <Card className="p-6 space-y-4">
             <h3 className="text-lg font-semibold flex items-center gap-2">
@@ -251,8 +238,6 @@ export default function ResultPage() {
             </div>
           </Card>
         </div>
-
-        {/* Recommended Tracks */}
         {recommendedTracks && recommendedTracks.length > 0 && (
           <div className="space-y-4">
             <h2 className="text-2xl font-bold">{t('result.tracks.title')}</h2>
@@ -309,8 +294,6 @@ export default function ResultPage() {
             </div>
           </div>
         )}
-
-        {/* SDG Alignment */}
         {sdgAlignment?.primarySDGs && sdgAlignment.primarySDGs.length > 0 && (
           <Card className="p-6 space-y-4">
             <h3 className="text-lg font-semibold flex items-center gap-2">
@@ -331,15 +314,11 @@ export default function ResultPage() {
             </div>
           </Card>
         )}
-
-        {/* Actions */}
         <div className="flex justify-center gap-4 pt-8">
           <Button variant="outline" onClick={() => window.close()}>{t('result.button.home')}</Button>
           <Button onClick={() => router.push('/')}>{t('result.button.retake')}</Button>
         </div>
       </main>
-
-      {/* Footer */}
       <footer className="border-t mt-16 py-8 text-center text-sm text-gray-600">
         <div className="container">
           <p>{t('result.footer')}</p>
