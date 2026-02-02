@@ -26,10 +26,10 @@ const isDevelopment = import.meta.env.DEV;
 
 export const defaultConfig: PAIBotConfig = {
   authApiUrl: isDevelopment
-    ? 'http://localhost:5164/api'
+    ? 'https://amgweb3webapp-it-eseqcmg7awggf6hr.southeastasia-01.azurewebsites.net/api'
     : 'https://amgweb3webapp-it-eseqcmg7awggf6hr.southeastasia-01.azurewebsites.net/api',
   assessmentApiUrl: isDevelopment
-    ? 'http://localhost:5164/api/AmgPAIAssessment'
+    ? 'http://localhost:3000/api/AmgPAIAssessment'
     : 'https://amgweb3webapp-it-eseqcmg7awggf6hr.southeastasia-01.azurewebsites.net/api/AmgPAIAssessment',
   defaultLanguage: 'zh',
   showLanguageSwitcher: true,

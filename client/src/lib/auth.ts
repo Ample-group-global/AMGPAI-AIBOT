@@ -14,7 +14,7 @@ export const getAuthApiUrl = () => {
   const envUrl = import.meta.env.VITE_AUTH_API_URL;
   if (envUrl) return envUrl;
   return isDevelopment
-    ? 'http://localhost:5164/api'
+    ? 'https://amgweb3webapp-it-eseqcmg7awggf6hr.southeastasia-01.azurewebsites.net/api'
     : 'https://amgweb3webapp-it-eseqcmg7awggf6hr.southeastasia-01.azurewebsites.net/api';
 };
 

@@ -23,43 +23,40 @@ export const appRouter = router({
     // Start new assessment session
     start: publicProcedure
       .input(z.object({
-        language: z.enum(['zh', 'en']).optional().default('zh'),
         userId: z.string().optional() // Accept userId from Privy auth
       }).optional())
       .mutation(async ({ ctx, input }) => {
-      const { createAssessmentSession } = await import('./assessmentDb');
-      const { getOpeningQuestion } = await import('./assessmentEngine');
+        const { createAssessmentSession } = await import('./assessmentDb');
+        const { getOpeningQuestion } = await import('./assessmentEngine');
 
-      // Use userId from input (Privy) or fallback to ctx.user?.id (session)
-      const userId = input?.userId || ctx.user?.id;
-      const session = await createAssessmentSession(userId);
-      const language = input?.language || 'zh';
-      const openingQuestion = getOpeningQuestion(language);
+        // Use userId from input (Privy) or fallback to ctx.user?.id (session)
+        const userId = input?.userId || ctx.user?.id;
+        const session = await createAssessmentSession(userId);
+        const openingQuestion = getOpeningQuestion();
 
-      return {
-        sessionId: session.id,
-        question: openingQuestion,
-        stage: 'opening',
-        progress: 0
-      };
-    }),
+        return {
+          sessionId: session.id,
+          question: openingQuestion,
+          stage: 'opening',
+          progress: 0
+        };
+      }),
 
     // 發送訊息並取得回應
     chat: publicProcedure
       .input(z.object({
         sessionId: z.string(),
-        message: z.string(),
-        language: z.enum(['zh', 'en']).optional().default('zh')
+        message: z.string()
       }))
       .mutation(async ({ input }) => {
-        const { 
-          getAssessmentSession, 
+        const {
+          getAssessmentSession,
           updateAssessmentSession,
           parseConversationHistory,
-          parseScores 
+          parseScores
         } = await import('./assessmentDb');
         const { processConversation, mergeScores } = await import('./assessmentEngine');
-        
+
         const session = await getAssessmentSession(input.sessionId);
         if (!session) {
           throw new Error('Session not found');
@@ -67,15 +64,14 @@ export const appRouter = router({
 
         const conversationHistory = parseConversationHistory(session);
         const currentScores = parseScores(session);
-        
+
         // 處理對話
         const aiResponse = await processConversation(
           input.message,
           conversationHistory,
           session.stage as any,
           session.conversationCount,
-          currentScores,
-          input.language
+          currentScores
         );
 
         // 更新對話歷史
@@ -124,25 +120,25 @@ export const appRouter = router({
       .query(async ({ input }) => {
         const { getAssessmentSession, parseScores, parseResult } = await import('./assessmentDb');
         const { recommendTracks } = await import('./assessmentEngine');
-        
+
         const session = await getAssessmentSession(input.sessionId);
         if (!session) {
           throw new Error('Session not found');
         }
 
         let result = parseResult(session);
-        
+
         // 如果還沒生成結果，現在生成
         if (!result) {
           const scores = parseScores(session) as any;
           const recommendations = recommendTracks(scores);
-          
+
           // 判斷投資人類型
           const riskScore = scores.risk?.raw || 50;
-          const investorType = 
+          const investorType =
             riskScore > 75 ? '積極型投資人' :
-            riskScore > 50 ? '平衡型投資人' :
-            riskScore > 25 ? '穩健型投資人' : '保守型投資人';
+              riskScore > 50 ? '平衡型投資人' :
+                riskScore > 25 ? '穩健型投資人' : '保守型投資人';
 
           result = {
             investorProfile: {
