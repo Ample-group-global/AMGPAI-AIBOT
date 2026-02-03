@@ -320,32 +320,32 @@ export default function AssessmentPage() {
         </AlertDialogContent>
       </AlertDialog>
       <header className="border-b border-white/5 bg-[#0a1628]/90 backdrop-blur-2xl sticky top-0 z-20">
-        <div className="container py-3">
+        <div className="container py-2 sm:py-3">
           <div className="flex items-center justify-between">
             <Button
               variant="ghost"
               onClick={handleClose}
               disabled={isSending}
-              className="gap-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl h-10"
+              className="gap-1 sm:gap-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg sm:rounded-xl h-8 sm:h-10 px-2 sm:px-3"
             >
               <ArrowLeftIcon />
-              <span className="hidden sm:inline text-sm">{t('assessment.back')}</span>
+              <span className="hidden sm:inline text-xs sm:text-sm">{t('assessment.back')}</span>
             </Button>
 
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#c9a962] to-[#d4b87a] flex items-center justify-center">
-                <span className="text-[#0a1628] font-bold text-sm">A</span>
+            <div className="flex items-center gap-1.5 sm:gap-2.5">
+              <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-[#c9a962] to-[#d4b87a] flex items-center justify-center">
+                <span className="text-[#0a1628] font-bold text-xs sm:text-sm">A</span>
               </div>
-              <h1 className="text-white font-semibold text-sm">AMG AI Assistance</h1>
+              <h1 className="text-white font-semibold text-xs sm:text-sm hidden xs:block">AMG AI Assistance</h1>
             </div>
 
             {config.showLanguageSwitcher && (
-              <div className="flex rounded-xl overflow-hidden border border-[#334155] bg-[#1a2744]/50 h-10">
+              <div className="flex rounded-lg sm:rounded-xl overflow-hidden border border-[#334155] bg-[#1a2744]/50 h-8 sm:h-10">
                 {languages.map((lang) => (
                   <button
                     key={lang.code}
                     onClick={() => setLanguage(lang.code)}
-                    className={`px-3 text-sm font-medium transition-all duration-300 ${language === lang.code
+                    className={`px-2 sm:px-3 text-xs sm:text-sm font-medium transition-all duration-300 ${language === lang.code
                       ? 'bg-gradient-to-r from-[#c9a962] to-[#d4b87a] text-[#0a1628]'
                       : 'text-gray-400 hover:text-white hover:bg-white/5'
                       }`}
@@ -356,13 +356,13 @@ export default function AssessmentPage() {
               </div>
             )}
           </div>
-          <div className="mt-3 flex items-center gap-3">
+          <div className="mt-2 sm:mt-3 flex items-center gap-2 sm:gap-3">
             <div className="flex-1">
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-xs text-gray-400">{getStageName(stage) || 'Getting Started'}</span>
-                <span className="text-xs font-medium text-[#c9a962]">{progress}%</span>
+              <div className="flex items-center justify-between mb-1 sm:mb-1.5">
+                <span className="text-[10px] sm:text-xs text-gray-400 truncate max-w-[150px] sm:max-w-none">{getStageName(stage) || 'Getting Started'}</span>
+                <span className="text-[10px] sm:text-xs font-medium text-[#c9a962]">{progress}%</span>
               </div>
-              <div className="h-1.5 bg-[#1a2744] rounded-full overflow-hidden">
+              <div className="h-1 sm:h-1.5 bg-[#1a2744] rounded-full overflow-hidden">
                 <div
                   className="h-full rounded-full transition-all duration-500 ease-out bg-gradient-to-r from-[#c9a962] to-[#d4b87a]"
                   style={{ width: `${progress}%` }}
@@ -377,32 +377,32 @@ export default function AssessmentPage() {
         onScroll={handleScroll}
         className="flex-1 overflow-y-auto relative z-10"
       >
-        <div className="container max-w-3xl py-4">
-          <div className="space-y-4">
+        <div className="container max-w-3xl py-3 sm:py-4 px-3 sm:px-4">
+          <div className="space-y-3 sm:space-y-4">
             {messages.map((msg, idx) => (
               <div
                 key={idx}
-                className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
+                className={`flex gap-2 sm:gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
               >
                 <div className="flex-shrink-0">
                   {msg.role === 'assistant' ? (
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#c9a962] to-[#d4b87a] flex items-center justify-center shadow-md">
-                      <SparklesIcon className="h-4 w-4 text-[#0a1628]" />
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-[#c9a962] to-[#d4b87a] flex items-center justify-center shadow-md">
+                      <SparklesIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#0a1628]" />
                     </div>
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-[#243352] border border-[#334155] flex items-center justify-center">
-                      <DynamicIcon name={t('ui.icon.user')} size={14} className="text-gray-400" />
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#243352] border border-[#334155] flex items-center justify-center">
+                      <DynamicIcon name={t('ui.icon.user')} size={12} className="text-gray-400 sm:w-3.5 sm:h-3.5" />
                     </div>
                   )}
                 </div>
-                <div className={`max-w-[80%] ${msg.role === 'user' ? 'text-right' : ''}`}>
+                <div className={`max-w-[85%] sm:max-w-[80%] ${msg.role === 'user' ? 'text-right' : ''}`}>
                   <div
-                    className={`inline-block px-4 py-3 rounded-2xl ${msg.role === 'user'
+                    className={`inline-block px-3 py-2 sm:px-4 sm:py-3 rounded-xl sm:rounded-2xl ${msg.role === 'user'
                       ? 'bg-gradient-to-br from-[#c9a962] to-[#d4b87a] text-[#0a1628] rounded-br-md'
                       : 'bg-[#1a2744] text-gray-100 border border-[#334155]/50 rounded-bl-md'
                       }`}
                   >
-                    <p className="whitespace-pre-wrap leading-relaxed text-[15px]">{msg.content}</p>
+                    <p className="whitespace-pre-wrap leading-relaxed text-sm sm:text-[15px]">{msg.content}</p>
                   </div>
                 </div>
               </div>
@@ -445,8 +445,8 @@ export default function AssessmentPage() {
       </main>
       {!isComplete && (
         <div className="sticky bottom-0 z-20 border-t border-[#1a2744] bg-[#0a1628]">
-          <div className="container max-w-3xl py-3">
-            <div className="flex items-end gap-2 p-1.5 rounded-xl bg-[#1a2744] border border-[#334155] focus-within:border-[#c9a962]/50 transition-colors">
+          <div className="container max-w-3xl py-2 sm:py-3 px-3 sm:px-4">
+            <div className="flex items-end gap-2 p-1 sm:p-1.5 rounded-lg sm:rounded-xl bg-[#1a2744] border border-[#334155] focus-within:border-[#c9a962]/50 transition-colors">
               <textarea
                 ref={inputRef}
                 value={input}
@@ -455,12 +455,12 @@ export default function AssessmentPage() {
                 placeholder={t('assessment.chat.placeholder')}
                 disabled={isSending || !sessionId}
                 rows={1}
-                className="flex-1 bg-transparent text-white placeholder:text-gray-500 resize-none outline-none py-2.5 px-3 max-h-[120px] text-[15px]"
+                className="flex-1 bg-transparent text-white placeholder:text-gray-500 resize-none outline-none py-2 sm:py-2.5 px-2 sm:px-3 max-h-[100px] sm:max-h-[120px] text-sm sm:text-[15px]"
               />
               <button
                 onClick={handleSend}
                 disabled={!input.trim() || isSending || !sessionId}
-                className="flex-shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br from-[#c9a962] to-[#d4b87a] text-[#0a1628] flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed transition-opacity"
+                className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br from-[#c9a962] to-[#d4b87a] text-[#0a1628] flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed transition-opacity"
               >
                 <SendIcon />
               </button>

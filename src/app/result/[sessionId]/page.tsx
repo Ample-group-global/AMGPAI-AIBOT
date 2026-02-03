@@ -6,6 +6,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { defaultConfig } from '@/config';
 import { useMasterData } from '@/contexts/MasterDataContext';
+import Image from 'next/image';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -100,13 +101,15 @@ export default function ResultPage() {
   }, [sessionId]);
 
   const LanguageSwitcher = () => (
-    <div className="flex rounded-lg border overflow-hidden">
+    <div className="flex rounded-lg sm:rounded-xl overflow-hidden border border-[#334155] bg-[#1a2744]/50">
       {languages.map((lang) => (
         <button
           key={lang.code}
           onClick={() => setLanguage(lang.code)}
-          className={`px-3 py-1.5 text-sm font-medium transition-colors ${language === lang.code ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'
-            }`}
+          className={`px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium transition-colors ${language === lang.code
+            ? 'bg-gradient-to-r from-[#c9a962] to-[#d4b87a] text-[#0a1628]'
+            : 'text-gray-400 hover:text-white hover:bg-white/5'
+          }`}
         >
           {lang.code === 'zh' ? '中文' : lang.code.toUpperCase()}
         </button>
@@ -116,10 +119,10 @@ export default function ResultPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#0a1628] flex items-center justify-center px-4">
         <div className="text-center space-y-4">
-          <div className="text-4xl animate-spin">{t('ui.icon.loading')}</div>
-          <p className="text-gray-600">{t('result.loading')}</p>
+          <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto border-4 border-[#1a2744] border-t-[#c9a962] rounded-full animate-spin"></div>
+          <p className="text-gray-400 text-sm sm:text-base">{t('result.loading')}</p>
         </div>
       </div>
     );
@@ -127,12 +130,16 @@ export default function ResultPage() {
 
   if (error || !result) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="p-8 max-w-md text-center space-y-4">
-          <div className="text-4xl">{t('ui.icon.error')}</div>
-          <h2 className="text-xl font-semibold">{t('result.error.title')}</h2>
-          <p className="text-gray-600">{t('result.error.message')}</p>
-          <Button onClick={() => router.push('/')}>{t('result.button.home')}</Button>
+      <div className="min-h-screen bg-[#0a1628] flex items-center justify-center px-4">
+        <Card className="p-6 sm:p-8 max-w-md text-center space-y-4 bg-[#1a2744] border-[#334155]">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+            <span className="text-2xl sm:text-3xl">⚠️</span>
+          </div>
+          <h2 className="text-lg sm:text-xl font-semibold text-white">{t('result.error.title')}</h2>
+          <p className="text-sm sm:text-base text-gray-400">{t('result.error.message')}</p>
+          <Button onClick={() => router.push('/')} className="bg-gradient-to-r from-[#c9a962] to-[#d4b87a] text-[#0a1628] hover:opacity-90">
+            {t('result.button.home')}
+          </Button>
         </Card>
       </div>
     );
@@ -147,14 +154,20 @@ export default function ResultPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      <header className="border-b bg-white/80 backdrop-blur-sm">
-        <div className="container py-4">
+    <div className="min-h-screen bg-[#0a1628]">
+      <header className="border-b border-white/5 bg-[#0a1628]/90 backdrop-blur-xl sticky top-0 z-10">
+        <div className="container py-3 sm:py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-semibold text-blue-900">{t('result.header.title')}</h1>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <Image src="/logo.png" alt="Ample Group Global" width={100} height={25} className="object-contain sm:w-[120px] sm:h-[30px]" />
+            </div>
+            <div className="flex items-center gap-2 sm:gap-3">
               <LanguageSwitcher />
-              <Button variant="outline" onClick={() => router.push('/')}>
+              <Button
+                variant="outline"
+                onClick={() => router.push('/')}
+                className="text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-3 border-[#334155] text-gray-300 hover:bg-[#1a2744] hover:text-white"
+              >
                 {t('result.nav.retake')}
               </Button>
             </div>
@@ -162,115 +175,122 @@ export default function ResultPage() {
         </div>
       </header>
 
-      <main className="container py-8 max-w-5xl space-y-8">
-        <Card className="p-8 bg-gradient-to-r from-blue-600 to-blue-700 text-white">
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="text-4xl">{t('ui.icon.user')}</div>
+      <main className="container py-4 sm:py-6 md:py-8 max-w-5xl space-y-4 sm:space-y-6 md:space-y-8 px-3 sm:px-4">
+        {/* Profile Card */}
+        <Card className="p-4 sm:p-6 md:p-8 bg-gradient-to-r from-[#c9a962] to-[#d4b87a] border-0">
+          <div className="space-y-3 sm:space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#0a1628]/20 flex items-center justify-center flex-shrink-0">
+                <span className="text-2xl sm:text-3xl">👤</span>
+              </div>
               <div>
-                <h2 className="text-2xl font-bold">{investorProfile.type}</h2>
-                <p className="text-blue-100">{investorProfile.summary}</p>
+                <h2 className="text-xl sm:text-2xl font-bold text-[#0a1628]">{investorProfile.type}</h2>
+                <p className="text-sm sm:text-base text-[#0a1628]/80">{investorProfile.summary}</p>
               </div>
             </div>
           </div>
         </Card>
-        <div className="grid md:grid-cols-2 gap-6">
-          <Card className="p-6 space-y-4">
-            <h3 className="text-lg font-semibold flex items-center gap-2">
-              <span>{t('result.scores.risk.icon')}</span>
+
+        {/* Scores Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+          <Card className="p-4 sm:p-6 space-y-3 sm:space-y-4 bg-[#1a2744] border-[#334155]">
+            <h3 className="text-base sm:text-lg font-semibold text-white flex items-center gap-2">
+              <span>📊</span>
               <span>{t('result.scores.risk.title')}</span>
             </h3>
-            <div className="space-y-3">
+            <div className="space-y-3 sm:space-y-4">
               <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span>{t('result.scores.risk.tolerance')}</span>
-                  <span className="font-semibold">{Math.round(scores.risk?.raw || 0)}/100</span>
+                <div className="flex justify-between text-xs sm:text-sm mb-1.5">
+                  <span className="text-gray-400">{t('result.scores.risk.tolerance')}</span>
+                  <span className="font-semibold text-[#c9a962]">{Math.round(scores.risk?.raw || 0)}/100</span>
                 </div>
-                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div className="h-full bg-blue-600 rounded-full transition-all" style={{ width: `${Math.round(scores.risk?.raw || 0)}%` }} />
+                <div className="h-2 sm:h-2.5 bg-[#0a1628] rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-[#c9a962] to-[#d4b87a] rounded-full transition-all" style={{ width: `${Math.round(scores.risk?.raw || 0)}%` }} />
                 </div>
               </div>
               <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span>{t('result.scores.risk.horizon')}</span>
-                  <span className="font-semibold">{Math.round(scores.timeHorizon?.raw || 0)}/100</span>
+                <div className="flex justify-between text-xs sm:text-sm mb-1.5">
+                  <span className="text-gray-400">{t('result.scores.risk.horizon')}</span>
+                  <span className="font-semibold text-green-400">{Math.round(scores.timeHorizon?.raw || 0)}/100</span>
                 </div>
-                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div className="h-full bg-green-600 rounded-full transition-all" style={{ width: `${Math.round(scores.timeHorizon?.raw || 0)}%` }} />
+                <div className="h-2 sm:h-2.5 bg-[#0a1628] rounded-full overflow-hidden">
+                  <div className="h-full bg-green-500 rounded-full transition-all" style={{ width: `${Math.round(scores.timeHorizon?.raw || 0)}%` }} />
                 </div>
               </div>
             </div>
           </Card>
 
-          <Card className="p-6 space-y-4">
-            <h3 className="text-lg font-semibold flex items-center gap-2">
-              <span>{t('result.scores.esg.icon')}</span>
+          <Card className="p-4 sm:p-6 space-y-3 sm:space-y-4 bg-[#1a2744] border-[#334155]">
+            <h3 className="text-base sm:text-lg font-semibold text-white flex items-center gap-2">
+              <span>🌱</span>
               <span>{t('result.scores.esg.title')}</span>
             </h3>
-            <div className="space-y-3">
+            <div className="space-y-3 sm:space-y-4">
               <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span>{t('result.scores.esg.environmental')}</span>
-                  <span className="font-semibold">{Math.round(scores.esg?.environmental || 0)}/100</span>
+                <div className="flex justify-between text-xs sm:text-sm mb-1.5">
+                  <span className="text-gray-400">{t('result.scores.esg.environmental')}</span>
+                  <span className="font-semibold text-green-400">{Math.round(scores.esg?.environmental || 0)}/100</span>
                 </div>
-                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div className="h-full bg-green-600 rounded-full transition-all" style={{ width: `${Math.round(scores.esg?.environmental || 0)}%` }} />
+                <div className="h-2 sm:h-2.5 bg-[#0a1628] rounded-full overflow-hidden">
+                  <div className="h-full bg-green-500 rounded-full transition-all" style={{ width: `${Math.round(scores.esg?.environmental || 0)}%` }} />
                 </div>
               </div>
               <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span>{t('result.scores.esg.social')}</span>
-                  <span className="font-semibold">{Math.round(scores.esg?.social || 0)}/100</span>
+                <div className="flex justify-between text-xs sm:text-sm mb-1.5">
+                  <span className="text-gray-400">{t('result.scores.esg.social')}</span>
+                  <span className="font-semibold text-orange-400">{Math.round(scores.esg?.social || 0)}/100</span>
                 </div>
-                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div className="h-full bg-orange-600 rounded-full transition-all" style={{ width: `${Math.round(scores.esg?.social || 0)}%` }} />
+                <div className="h-2 sm:h-2.5 bg-[#0a1628] rounded-full overflow-hidden">
+                  <div className="h-full bg-orange-500 rounded-full transition-all" style={{ width: `${Math.round(scores.esg?.social || 0)}%` }} />
                 </div>
               </div>
               <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span>{t('result.scores.esg.governance')}</span>
-                  <span className="font-semibold">{Math.round(scores.esg?.governance || 0)}/100</span>
+                <div className="flex justify-between text-xs sm:text-sm mb-1.5">
+                  <span className="text-gray-400">{t('result.scores.esg.governance')}</span>
+                  <span className="font-semibold text-purple-400">{Math.round(scores.esg?.governance || 0)}/100</span>
                 </div>
-                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div className="h-full bg-purple-600 rounded-full transition-all" style={{ width: `${Math.round(scores.esg?.governance || 0)}%` }} />
+                <div className="h-2 sm:h-2.5 bg-[#0a1628] rounded-full overflow-hidden">
+                  <div className="h-full bg-purple-500 rounded-full transition-all" style={{ width: `${Math.round(scores.esg?.governance || 0)}%` }} />
                 </div>
               </div>
             </div>
           </Card>
         </div>
+
+        {/* Recommended Tracks */}
         {recommendedTracks && recommendedTracks.length > 0 && (
-          <div className="space-y-4">
-            <h2 className="text-2xl font-bold">{t('result.tracks.title')}</h2>
-            <div className="grid md:grid-cols-3 gap-6">
+          <div className="space-y-3 sm:space-y-4">
+            <h2 className="text-xl sm:text-2xl font-bold text-white">{t('result.tracks.title')}</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {recommendedTracks.map((track) => (
-                <Card key={track.trackId} className="p-6 space-y-4 hover:shadow-lg transition-shadow">
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1">
-                      <div className="text-sm text-gray-600">#{track.rank}</div>
-                      <h3 className="text-xl font-bold">{language === 'zh' ? track.trackName : track.trackNameEn}</h3>
-                      <p className="text-sm text-gray-600">{language === 'zh' ? track.trackNameEn : track.trackName}</p>
+                <Card key={track.trackId} className="p-4 sm:p-6 space-y-3 sm:space-y-4 bg-[#1a2744] border-[#334155] hover:border-[#c9a962]/50 transition-colors">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="space-y-1 flex-1 min-w-0">
+                      <div className="text-xs text-[#c9a962]">#{track.rank}</div>
+                      <h3 className="text-base sm:text-lg font-bold text-white truncate">{language === 'zh' ? track.trackName : track.trackNameEn}</h3>
+                      <p className="text-xs sm:text-sm text-gray-400 truncate">{language === 'zh' ? track.trackNameEn : track.trackName}</p>
                     </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-blue-600">{Math.round(track.matchScore)}%</div>
-                      <div className="text-xs text-gray-600">{t('result.tracks.match')}</div>
+                    <div className="text-right flex-shrink-0">
+                      <div className="text-xl sm:text-2xl font-bold text-[#c9a962]">{Math.round(track.matchScore)}%</div>
+                      <div className="text-[10px] sm:text-xs text-gray-500">{t('result.tracks.match')}</div>
                     </div>
                   </div>
 
-                  {track.description && <p className="text-sm text-gray-700">{track.description}</p>}
+                  {track.description && <p className="text-xs sm:text-sm text-gray-300 line-clamp-2">{track.description}</p>}
 
                   {track.reason && (
-                    <div className="space-y-2">
-                      <div className="text-sm font-semibold">{t('result.tracks.reason')}</div>
-                      <p className="text-sm text-gray-600">{track.reason}</p>
+                    <div className="space-y-1">
+                      <div className="text-xs font-semibold text-gray-400">{t('result.tracks.reason')}</div>
+                      <p className="text-xs sm:text-sm text-gray-300 line-clamp-2">{track.reason}</p>
                     </div>
                   )}
 
                   {track.sdgs && track.sdgs.length > 0 && (
-                    <div className="space-y-2">
-                      <div className="text-sm font-semibold">{t('result.tracks.sdg')}</div>
-                      <div className="flex flex-wrap gap-2">
-                        {track.sdgs.map((sdgId: number) => (
-                          <div key={sdgId} className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs flex items-center gap-1">
+                    <div className="space-y-1.5">
+                      <div className="text-xs font-semibold text-gray-400">{t('result.tracks.sdg')}</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {track.sdgs.slice(0, 4).map((sdgId: number) => (
+                          <div key={sdgId} className="px-2 py-1 bg-[#0a1628] text-[#c9a962] rounded text-[10px] sm:text-xs flex items-center gap-1">
                             <span>{sdgNames[sdgId]?.icon}</span>
                             <span>SDG {sdgId}</span>
                           </div>
@@ -280,11 +300,11 @@ export default function ResultPage() {
                   )}
 
                   {track.examples && track.examples.length > 0 && (
-                    <div className="space-y-2">
-                      <div className="text-sm font-semibold">{t('result.tracks.examples')}</div>
-                      <div className="flex flex-wrap gap-2">
+                    <div className="space-y-1.5">
+                      <div className="text-xs font-semibold text-gray-400">{t('result.tracks.examples')}</div>
+                      <div className="flex flex-wrap gap-1.5">
                         {track.examples.slice(0, 3).map((example: string, idx: number) => (
-                          <div key={idx} className="px-2 py-1 bg-gray-100 rounded text-xs">{example}</div>
+                          <div key={idx} className="px-2 py-1 bg-[#0a1628] text-gray-300 rounded text-[10px] sm:text-xs">{example}</div>
                         ))}
                       </div>
                     </div>
@@ -294,34 +314,50 @@ export default function ResultPage() {
             </div>
           </div>
         )}
+
+        {/* SDG Alignment */}
         {sdgAlignment?.primarySDGs && sdgAlignment.primarySDGs.length > 0 && (
-          <Card className="p-6 space-y-4">
-            <h3 className="text-lg font-semibold flex items-center gap-2">
-              <span>{t('result.sdg.icon')}</span>
+          <Card className="p-4 sm:p-6 space-y-3 sm:space-y-4 bg-[#1a2744] border-[#334155]">
+            <h3 className="text-base sm:text-lg font-semibold text-white flex items-center gap-2">
+              <span>🎯</span>
               <span>{t('result.sdg.title')}</span>
             </h3>
-            <p className="text-sm text-gray-600">{sdgAlignment.explanation}</p>
-            <div className="flex flex-wrap gap-3">
+            <p className="text-xs sm:text-sm text-gray-400">{sdgAlignment.explanation}</p>
+            <div className="flex flex-wrap gap-2 sm:gap-3">
               {sdgAlignment.primarySDGs.map((sdgId: number) => (
-                <div key={sdgId} className="flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg">
-                  <span className="text-2xl">{sdgNames[sdgId]?.icon}</span>
+                <div key={sdgId} className="flex items-center gap-2 px-3 py-2 bg-[#0a1628] border border-[#334155] rounded-lg">
+                  <span className="text-xl sm:text-2xl">{sdgNames[sdgId]?.icon}</span>
                   <div>
-                    <div className="font-semibold text-sm">SDG {sdgId}</div>
-                    <div className="text-xs text-gray-600">{language === 'zh' ? sdgNames[sdgId]?.name : sdgNames[sdgId]?.nameEn}</div>
+                    <div className="font-semibold text-xs sm:text-sm text-white">SDG {sdgId}</div>
+                    <div className="text-[10px] sm:text-xs text-gray-400">{language === 'zh' ? sdgNames[sdgId]?.name : sdgNames[sdgId]?.nameEn}</div>
                   </div>
                 </div>
               ))}
             </div>
           </Card>
         )}
-        <div className="flex justify-center gap-4 pt-8">
-          <Button variant="outline" onClick={() => window.close()}>{t('result.button.home')}</Button>
-          <Button onClick={() => router.push('/')}>{t('result.button.retake')}</Button>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 pt-4 sm:pt-8">
+          <Button
+            variant="outline"
+            onClick={() => window.close()}
+            className="border-[#334155] text-gray-300 hover:bg-[#1a2744] hover:text-white h-10 sm:h-11"
+          >
+            {t('result.button.home')}
+          </Button>
+          <Button
+            onClick={() => router.push('/')}
+            className="bg-gradient-to-r from-[#c9a962] to-[#d4b87a] text-[#0a1628] hover:opacity-90 h-10 sm:h-11"
+          >
+            {t('result.button.retake')}
+          </Button>
         </div>
       </main>
-      <footer className="border-t mt-16 py-8 text-center text-sm text-gray-600">
+
+      <footer className="border-t border-white/5 mt-8 sm:mt-12 md:mt-16 py-6 sm:py-8 text-center">
         <div className="container">
-          <p>{t('result.footer')}</p>
+          <p className="text-xs sm:text-sm text-gray-500">{t('result.footer')}</p>
         </div>
       </footer>
     </div>

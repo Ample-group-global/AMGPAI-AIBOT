@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -33,14 +34,19 @@ function isTokenExpired(token: string): boolean {
 }
 
 // AMG Logo Component
-const AMGLogo = () => (
-  <div className="relative group">
-    <div className="absolute inset-0 bg-gradient-to-br from-[#c9a962] to-[#d4b87a] rounded-xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity duration-500"></div>
-    <div className="relative w-12 h-12 rounded-xl bg-gradient-to-br from-[#c9a962] to-[#d4b87a] flex items-center justify-center shadow-lg">
-      <span className="text-[#0a1628] font-bold text-xl">A</span>
+const AMGLogo = ({ size = 'default' }: { size?: 'small' | 'default' | 'large' }) => {
+  const dimensions = {
+    small: { width: 120, height: 30 },
+    default: { width: 150, height: 38 },
+    large: { width: 200, height: 50 },
+  };
+  const { width, height } = dimensions[size];
+  return (
+    <div className="relative group">
+      <Image src="/logo.png" alt="Ample Group Global" width={width} height={height} className="object-contain" />
     </div>
-  </div>
-);
+  );
+};
 
 export default function Home() {
   const router = useRouter();
@@ -50,8 +56,78 @@ export default function Home() {
   const [loginStep, setLoginStep] = useState<'email' | 'otp'>('email');
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
+  const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
+  const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  // Focus first OTP input when step changes to OTP
+  useEffect(() => {
+    if (loginStep === 'otp' && otpInputRefs.current[0]) {
+      setTimeout(() => otpInputRefs.current[0]?.focus(), 100);
+    }
+  }, [loginStep]);
+
+  // Update combined OTP value when digits change
+  useEffect(() => {
+    setOtp(otpDigits.join(''));
+  }, [otpDigits]);
+
+  const handleOtpChange = (index: number, value: string) => {
+    // Only allow single digit
+    const digit = value.replace(/\D/g, '').slice(-1);
+
+    const newDigits = [...otpDigits];
+    newDigits[index] = digit;
+    setOtpDigits(newDigits);
+
+    // Auto-advance to next input
+    if (digit && index < 5) {
+      otpInputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace') {
+      if (!otpDigits[index] && index > 0) {
+        // If current is empty and backspace pressed, go to previous
+        otpInputRefs.current[index - 1]?.focus();
+        const newDigits = [...otpDigits];
+        newDigits[index - 1] = '';
+        setOtpDigits(newDigits);
+      } else {
+        // Clear current
+        const newDigits = [...otpDigits];
+        newDigits[index] = '';
+        setOtpDigits(newDigits);
+      }
+    } else if (e.key === 'ArrowLeft' && index > 0) {
+      otpInputRefs.current[index - 1]?.focus();
+    } else if (e.key === 'ArrowRight' && index < 5) {
+      otpInputRefs.current[index + 1]?.focus();
+    } else if (e.key === 'Enter' && otp.length === 6 && !loginLoading) {
+      verifyOtp();
+    }
+  };
+
+  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (pastedData) {
+      const newDigits = [...otpDigits];
+      for (let i = 0; i < 6; i++) {
+        newDigits[i] = pastedData[i] || '';
+      }
+      setOtpDigits(newDigits);
+      // Focus last filled input or last input
+      const lastFilledIndex = Math.min(pastedData.length, 5);
+      otpInputRefs.current[lastFilledIndex]?.focus();
+    }
+  };
+
+  const resetOtpDigits = () => {
+    setOtpDigits(['', '', '', '', '', '']);
+  };
 
   const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
@@ -147,6 +223,7 @@ export default function Home() {
     setLoginStep('email');
     setEmail('');
     setOtp('');
+    setOtpDigits(['', '', '', '', '', '']);
     setLoginError('');
   };
 
@@ -156,12 +233,12 @@ export default function Home() {
   };
 
   const LanguageSwitcher = () => (
-    <div className="flex rounded-xl overflow-hidden border border-[#334155] bg-[#1a2744]/50 backdrop-blur-sm">
+    <div className="flex rounded-lg sm:rounded-xl overflow-hidden border border-[#334155] bg-[#1a2744]/50 backdrop-blur-sm">
       {languages.map((lang) => (
         <button
           key={lang.code}
           onClick={() => setLanguage(lang.code)}
-          className={`px-4 py-2 text-sm font-medium transition-all duration-300 ${
+          className={`px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium transition-all duration-300 ${
             language === lang.code
               ? 'bg-gradient-to-r from-[#c9a962] to-[#d4b87a] text-[#0a1628]'
               : 'text-gray-400 hover:text-white hover:bg-white/5'
@@ -188,16 +265,19 @@ export default function Home() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen gradient-mesh flex items-center justify-center">
+      <div className="min-h-screen gradient-mesh flex items-center justify-center px-4">
         <div className="text-center">
-          <div className="relative inline-block">
-            <div className="w-20 h-20 border-4 border-[#1a2744] rounded-full"></div>
-            <div className="w-20 h-20 border-4 border-t-[#c9a962] border-r-[#c9a962] rounded-full animate-spin absolute top-0 left-0"></div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-[#c9a962] font-bold text-xl">A</span>
-            </div>
+          <div className="mb-6 sm:mb-8">
+            <Image src="/logo.png" alt="Ample Group Global" width={160} height={40} className="object-contain mx-auto sm:w-[200px] sm:h-[50px]" />
           </div>
-          <p className="mt-6 text-gray-400 animate-pulse">{t('common.loading')}</p>
+          <div className="relative inline-block">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 border-4 border-[#1a2744] rounded-full"></div>
+            <div className="w-10 h-10 sm:w-12 sm:h-12 border-4 border-t-[#c9a962] border-r-[#c9a962] rounded-full animate-spin absolute top-0 left-0"></div>
+          </div>
+          <div className="mt-4 sm:mt-6 text-gray-400 animate-pulse">
+            <p className="text-sm sm:text-base">載入中...</p>
+            <p className="text-xs sm:text-sm">Loading...</p>
+          </div>
         </div>
       </div>
     );
@@ -221,25 +301,28 @@ export default function Home() {
 
       {/* Login Modal */}
       <Dialog open={showLoginModal} onOpenChange={handleCloseModal}>
-        <DialogContent className="sm:max-w-md bg-gradient-to-br from-[#1a2744] to-[#0a1628] border-[#334155] text-white animate-scale-in">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#c9a962]/5 to-transparent rounded-lg pointer-events-none"></div>
-          <DialogHeader className="relative">
-            <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#c9a962] to-[#d4b87a] flex items-center justify-center">
-                <span className="text-[#0a1628] font-bold text-2xl">A</span>
+        <DialogContent className="w-[92vw] max-w-[420px] mx-auto bg-gradient-to-br from-[#1a2744] to-[#0a1628] border border-[#334155] text-white animate-scale-in shadow-2xl shadow-[#c9a962]/10 rounded-2xl p-6 sm:p-8">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#c9a962]/5 to-transparent rounded-2xl pointer-events-none"></div>
+          <div className="absolute -inset-0.5 bg-gradient-to-r from-[#c9a962]/20 via-transparent to-[#c9a962]/20 rounded-2xl blur-sm pointer-events-none"></div>
+          <DialogHeader className="relative space-y-4">
+            <div className="flex justify-center">
+              <div className="p-3 rounded-xl bg-[#0a1628]/50 border border-[#334155]">
+                <Image src="/logo.png" alt="Ample Group Global" width={140} height={35} className="object-contain sm:w-[160px] sm:h-[40px]" />
               </div>
             </div>
-            <DialogTitle className="text-center text-2xl text-white font-bold">
-              {loginStep === 'email' ? t('home.login.title') : t('home.login.otpTitle')}
-            </DialogTitle>
-            <DialogDescription className="text-center text-gray-400">
-              {loginStep === 'email'
-                ? t('home.login.subtitle')
-                : `${t('home.login.otpSubtitle')} ${email}`}
-            </DialogDescription>
+            <div className="space-y-2">
+              <DialogTitle className="text-center text-xl sm:text-2xl text-white font-bold">
+                {loginStep === 'email' ? t('home.login.title') : t('home.login.otpTitle')}
+              </DialogTitle>
+              <DialogDescription className="text-center text-sm sm:text-base text-gray-400 leading-relaxed">
+                {loginStep === 'email'
+                  ? t('home.login.subtitle')
+                  : `${t('home.login.otpSubtitle')} ${email}`}
+              </DialogDescription>
+            </div>
           </DialogHeader>
 
-          <div className="space-y-4 py-4 relative">
+          <div className="space-y-5 pt-4 relative">
             {loginStep === 'email' ? (
               <>
                 <div className="space-y-2">
@@ -271,31 +354,38 @@ export default function Home() {
               </>
             ) : (
               <>
-                <div className="space-y-2">
-                  <Label htmlFor="otp" className="text-gray-300">{t('home.login.otpLabel')}</Label>
-                  <Input
-                    id="otp"
-                    type="text"
-                    placeholder={t('home.login.otpPlaceholder')}
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    onKeyPress={(e) => e.key === 'Enter' && !loginLoading && verifyOtp()}
-                    disabled={loginLoading}
-                    autoFocus
-                    maxLength={6}
-                    className="text-center text-3xl tracking-[0.5em] bg-[#0a1628] border-[#334155] text-white placeholder:text-gray-500 placeholder:text-base placeholder:tracking-normal focus:border-[#c9a962] focus:ring-2 focus:ring-[#c9a962]/20 h-16 rounded-xl font-mono"
-                  />
+                <div className="space-y-4">
+                  <Label className="text-gray-300 text-center block">{t('home.login.otpLabel')}</Label>
+                  <div className="flex justify-center gap-2 sm:gap-3">
+                    {otpDigits.map((digit, index) => (
+                      <input
+                        key={index}
+                        ref={(el) => { otpInputRefs.current[index] = el; }}
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={1}
+                        value={digit}
+                        onChange={(e) => handleOtpChange(index, e.target.value)}
+                        onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                        onPaste={handleOtpPaste}
+                        disabled={loginLoading}
+                        className="w-10 h-12 sm:w-12 sm:h-14 text-center text-xl sm:text-2xl font-bold bg-[#0a1628] border-2 border-[#334155] text-white rounded-lg sm:rounded-xl focus:border-[#c9a962] focus:ring-2 focus:ring-[#c9a962]/20 focus:outline-none transition-all duration-200 disabled:opacity-50"
+                        aria-label={`OTP digit ${index + 1}`}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-500 text-center">{t('home.login.otpPlaceholder')}</p>
                 </div>
                 {loginError && (
                   <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
                     <p className="text-sm text-red-400 text-center">{loginError}</p>
                   </div>
                 )}
-                <div className="space-y-3">
+                <div className="space-y-3 pt-2">
                   <Button
                     className="w-full h-12 rounded-xl btn-amg-primary text-base"
                     onClick={verifyOtp}
-                    disabled={loginLoading || !otp.trim()}
+                    disabled={loginLoading || otp.length !== 6}
                   >
                     <span>{loginLoading ? t('home.login.verifying') : t('home.login.verify')}</span>
                   </Button>
@@ -303,7 +393,7 @@ export default function Home() {
                     <Button
                       variant="outline"
                       className="flex-1 h-11 rounded-xl border-[#334155] text-gray-400 hover:bg-[#1a2744] hover:text-white hover:border-[#c9a962]/50"
-                      onClick={() => { setLoginStep('email'); setOtp(''); setLoginError(''); }}
+                      onClick={() => { setLoginStep('email'); resetOtpDigits(); setLoginError(''); }}
                       disabled={loginLoading}
                     >
                       {t('home.login.back')}
@@ -311,7 +401,7 @@ export default function Home() {
                     <Button
                       variant="outline"
                       className="flex-1 h-11 rounded-xl border-[#334155] text-gray-400 hover:bg-[#1a2744] hover:text-white hover:border-[#c9a962]/50"
-                      onClick={sendOtp}
+                      onClick={() => { resetOtpDigits(); sendOtp(); }}
                       disabled={loginLoading}
                     >
                       {t('home.login.resend')}
@@ -326,14 +416,10 @@ export default function Home() {
 
       {/* Header */}
       <header className="relative z-10 border-b border-white/5 bg-[#0a1628]/60 backdrop-blur-xl sticky top-0">
-        <div className="container py-4">
+        <div className="container py-3 sm:py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4 animate-slide-in">
-              <AMGLogo />
-              <div>
-                <h1 className="text-xl font-bold text-white">{t('home.header.title')}</h1>
-                <p className="text-xs text-gray-500">Powered by AI</p>
-              </div>
+            <div className="flex items-center gap-2 sm:gap-4 animate-slide-in">
+              <AMGLogo size="small" />
             </div>
             <LanguageSwitcher />
           </div>
@@ -341,89 +427,105 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <main className="relative z-10 container py-20 lg:py-28">
-        <div className="max-w-5xl mx-auto text-center">
+      <main className="relative z-10 container py-10 sm:py-16 md:py-20 lg:py-28">
+        <div className="max-w-5xl mx-auto text-center px-2 sm:px-4">
           {/* Badge */}
           <div className="animate-slide-up opacity-0 stagger-1">
-            <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-[#1a2744]/60 backdrop-blur-sm border border-[#334155] mb-8">
-              <span className="relative flex h-2.5 w-2.5">
+            <div className="inline-flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-2 sm:py-2.5 rounded-full bg-[#1a2744]/60 backdrop-blur-sm border border-[#334155] mb-6 sm:mb-8">
+              <span className="relative flex h-2 w-2 sm:h-2.5 sm:w-2.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#c9a962] opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#c9a962]"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 sm:h-2.5 sm:w-2.5 bg-[#c9a962]"></span>
               </span>
-              <span className="text-sm text-gray-300">AI-Powered Investment Assessment</span>
+              <span className="text-xs sm:text-sm">
+                <span className="text-white font-medium">Ample Group Global</span>
+                <span className="text-gray-400 mx-1 sm:mx-2">|</span>
+                <span className="text-[#c9a962]">AI-Powered Investment Assessment</span>
+              </span>
             </div>
           </div>
 
           {/* Title */}
-          <div className="space-y-6 animate-slide-up opacity-0 stagger-2">
-            <h2 className="text-4xl md:text-5xl lg:text-7xl font-bold text-white leading-[1.1] tracking-tight">
-              {t('home.hero.title').split(' ').slice(0, 2).join(' ')}{' '}
-              <span className="text-gold-gradient">{t('home.hero.title').split(' ').slice(2, 4).join(' ')}</span>{' '}
-              {t('home.hero.title').split(' ').slice(4).join(' ')}
+          <div className="space-y-4 sm:space-y-6 md:space-y-8 animate-slide-up opacity-0 stagger-2">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-[1.2] tracking-tight px-2">
+              {language === 'zh' ? (
+                <>
+                  與 <span className="text-gold-gradient">Ample Group Global</span>
+                  <br className="hidden sm:block" />
+                  一起探索您的永續投資之路
+                </>
+              ) : (
+                <>
+                  Discover Your Sustainable
+                  <br className="hidden sm:block" />
+                  Investment Path with
+                  <br />
+                  <span className="text-gold-gradient">Ample Group Global</span>
+                </>
+              )}
             </h2>
-            <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-sm sm:text-base md:text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed px-4">
               {t('home.hero.subtitle')}
             </p>
           </div>
 
           {/* Feature Cards */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5 mt-20">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 md:gap-6 mt-10 sm:mt-12 md:mt-16">
             {features.map((feature, index) => (
               <div
                 key={index}
-                className={`group card-amg-premium p-6 rounded-2xl text-left animate-slide-up opacity-0`}
+                className={`group card-amg-premium p-4 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl text-left animate-slide-up opacity-0`}
                 style={{ animationDelay: `${0.3 + index * 0.1}s` }}
               >
                 <div className="relative">
                   <div className="absolute -inset-2 bg-[#c9a962]/20 rounded-xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                  <div className="relative w-14 h-14 rounded-xl bg-[#0a1628] border border-[#334155] group-hover:border-[#c9a962]/50 flex items-center justify-center mb-5 transition-all duration-500">
-                    <DynamicIcon name={t(feature.iconKey)} size={28} className="text-[#c9a962]" />
+                  <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-[#0a1628] border border-[#c9a962]/30 group-hover:border-[#c9a962]/50 flex items-center justify-center mb-3 sm:mb-4 transition-all duration-500">
+                    <DynamicIcon name={t(feature.iconKey)} size={20} className="text-[#c9a962] sm:w-6 sm:h-6" />
                   </div>
                 </div>
-                <h3 className="font-semibold text-white text-lg mb-2 group-hover:text-[#c9a962] transition-colors duration-300">
+                <h3 className="font-bold text-white text-sm sm:text-base mb-1.5 sm:mb-2 group-hover:text-[#c9a962] transition-colors duration-300">
                   {t(feature.titleKey)}
                 </h3>
-                <p className="text-sm text-gray-400 leading-relaxed">{t(feature.descKey)}</p>
+                <p className="text-xs sm:text-sm text-gray-300 leading-relaxed">{t(feature.descKey)}</p>
               </div>
             ))}
           </div>
 
           {/* CTA Section */}
-          <div className="mt-20 space-y-6 animate-slide-up opacity-0" style={{ animationDelay: '0.7s' }}>
-            <div className="flex items-center justify-center gap-3 text-gray-500">
-              <div className="w-8 h-8 rounded-lg bg-[#1a2744] border border-[#334155] flex items-center justify-center">
-                <DynamicIcon name={t('ui.icon.time')} size={16} className="text-[#c9a962]" />
+          <div className="mt-10 sm:mt-12 md:mt-16 space-y-4 sm:space-y-6 animate-slide-up opacity-0" style={{ animationDelay: '0.7s' }}>
+            <div className="flex items-center justify-center gap-2 sm:gap-3">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#1a2744] border border-[#c9a962]/30 flex items-center justify-center">
+                <DynamicIcon name={t('ui.icon.time')} size={14} className="text-[#c9a962] sm:w-4 sm:h-4" />
               </div>
-              <span className="text-sm">{t('home.cta.time')}</span>
+              <span className="text-xs sm:text-sm text-gray-300">{t('home.cta.time')}</span>
             </div>
 
             <button
               onClick={handleStartAssessment}
               className="group relative inline-flex items-center justify-center"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-[#c9a962] to-[#d4b87a] rounded-2xl blur-xl opacity-50 group-hover:opacity-75 transition-opacity duration-500"></div>
-              <div className="relative px-12 py-5 bg-gradient-to-r from-[#c9a962] to-[#d4b87a] rounded-2xl text-[#0a1628] font-bold text-lg transition-all duration-300 hover:shadow-2xl hover:shadow-[#c9a962]/30 transform hover:-translate-y-1">
+              <div className="absolute inset-0 bg-gradient-to-r from-[#c9a962] to-[#d4b87a] rounded-xl sm:rounded-2xl blur-xl opacity-50 group-hover:opacity-75 transition-opacity duration-500"></div>
+              <div className="relative px-6 sm:px-8 md:px-10 py-3 sm:py-4 bg-gradient-to-r from-[#c9a962] to-[#d4b87a] rounded-lg sm:rounded-xl text-[#0a1628] font-bold text-sm sm:text-base transition-all duration-300 hover:shadow-2xl hover:shadow-[#c9a962]/30 transform hover:-translate-y-1">
                 {t('home.cta.button')}
               </div>
             </button>
           </div>
 
           {/* Benefits Section */}
-          <div className="mt-28 pt-16 border-t border-white/5">
-            <div className="grid md:grid-cols-3 gap-10">
+          <div className="mt-12 sm:mt-16 md:mt-20 pt-8 sm:pt-10 md:pt-12 border-t border-white/10">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
               {benefits.map((benefit, index) => (
                 <div
                   key={index}
                   className="text-left animate-slide-up opacity-0"
                   style={{ animationDelay: `${0.8 + index * 0.1}s` }}
                 >
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#c9a962]/20 to-[#c9a962]/5 border border-[#c9a962]/30 flex items-center justify-center">
-                      <DynamicIcon name={t('ui.icon.check')} size={20} className="text-[#c9a962]" />
+                  <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#c9a962]/20 border border-[#c9a962]/40 flex items-center justify-center flex-shrink-0">
+                      <DynamicIcon name={t('ui.icon.check')} size={14} className="text-[#c9a962] sm:w-4 sm:h-4" />
                     </div>
-                    <span className="font-semibold text-white text-lg">{t(benefit.titleKey)}</span>
+                    <span className="font-bold text-white text-sm sm:text-base">{t(benefit.titleKey)}</span>
                   </div>
-                  <p className="text-gray-400 leading-relaxed pl-14">{t(benefit.descKey)}</p>
+                  <p className="text-xs sm:text-sm text-gray-300 leading-relaxed pl-9 sm:pl-11">{t(benefit.descKey)}</p>
                 </div>
               ))}
             </div>
@@ -432,16 +534,13 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 border-t border-white/5 py-8 mt-16">
+      <footer className="relative z-10 border-t border-white/10 py-6 sm:py-8 mt-8 sm:mt-12">
         <div className="container">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#c9a962] to-[#d4b87a] flex items-center justify-center">
-                <span className="text-[#0a1628] font-bold text-sm">A</span>
-              </div>
-              <span className="text-gray-500 text-sm">Ample Group Global</span>
+          <div className="flex flex-col items-center justify-center gap-3 sm:gap-4 md:flex-row md:justify-between">
+            <div className="flex items-center">
+              <Image src="/logo.png" alt="Ample Group Global" width={120} height={30} className="object-contain sm:w-[140px] sm:h-[35px]" />
             </div>
-            <p className="text-sm text-gray-500">
+            <p className="text-xs sm:text-sm text-gray-400 text-center">
               {t('home.footer')} © {new Date().getFullYear()}
             </p>
           </div>
