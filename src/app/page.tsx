@@ -159,16 +159,23 @@ export default function Home() {
         body: JSON.stringify({ email }),
       });
 
-      if (!response.ok) throw new Error('Failed to send OTP');
+      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
 
       const data = await response.json();
       if (data.isSuccess && data.data?.success) {
         setLoginStep('otp');
       } else {
+        setLoginError(data.errorMessage || t('home.login.otpFailed'));
+      }
+    } catch (error) {
+      console.error('SendOTP Error:', error);
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      // Check if it's a CORS or network error
+      if (errorMsg.includes('Failed to fetch') || errorMsg.includes('NetworkError')) {
+        setLoginError('Network error - please check if the API server is running (CORS issue)');
+      } else {
         setLoginError(t('home.login.otpFailed'));
       }
-    } catch {
-      setLoginError(t('home.login.otpFailed'));
     } finally {
       setLoginLoading(false);
     }
@@ -416,10 +423,10 @@ export default function Home() {
 
       {/* Header */}
       <header className="relative z-10 border-b border-white/5 bg-[#0a1628]/60 backdrop-blur-xl sticky top-0">
-        <div className="container py-3 sm:py-4">
+        <div className="container py-2 sm:py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 sm:gap-4 animate-slide-in">
-              <AMGLogo size="small" />
+            <div className="flex items-center gap-2 animate-slide-in">
+              <Image src="/logo.png" alt="Ample Group Global" width={100} height={25} className="object-contain sm:w-[120px] sm:h-[30px]" />
             </div>
             <LanguageSwitcher />
           </div>
@@ -427,14 +434,14 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <main className="relative z-10 container py-10 sm:py-16 md:py-20 lg:py-28">
-        <div className="max-w-5xl mx-auto text-center px-2 sm:px-4">
+      <main className="relative z-10 container py-4 sm:py-6 md:py-8 lg:py-10">
+        <div className="max-w-6xl mx-auto text-center px-2 sm:px-4">
           {/* Badge */}
           <div className="animate-slide-up opacity-0 stagger-1">
-            <div className="inline-flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-2 sm:py-2.5 rounded-full bg-[#1a2744]/60 backdrop-blur-sm border border-[#334155] mb-6 sm:mb-8">
-              <span className="relative flex h-2 w-2 sm:h-2.5 sm:w-2.5">
+            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-[#1a2744]/60 backdrop-blur-sm border border-[#334155] mb-3 sm:mb-4">
+              <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#c9a962] opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 sm:h-2.5 sm:w-2.5 bg-[#c9a962]"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#c9a962]"></span>
               </span>
               <span className="text-xs sm:text-sm">
                 <span className="text-white font-medium">Ample Group Global</span>
@@ -445,56 +452,50 @@ export default function Home() {
           </div>
 
           {/* Title */}
-          <div className="space-y-4 sm:space-y-6 md:space-y-8 animate-slide-up opacity-0 stagger-2">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-[1.2] tracking-tight px-2">
+          <div className="space-y-2 sm:space-y-3 animate-slide-up opacity-0 stagger-2">
+            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white leading-[1.2] tracking-tight px-2">
               {language === 'zh' ? (
                 <>
-                  與 <span className="text-gold-gradient">Ample Group Global</span>
-                  <br className="hidden sm:block" />
-                  一起探索您的永續投資之路
+                  與 <span className="text-gold-gradient">Ample Group Global</span> 一起探索您的永續投資之路
                 </>
               ) : (
                 <>
-                  Discover Your Sustainable
-                  <br className="hidden sm:block" />
-                  Investment Path with
-                  <br />
-                  <span className="text-gold-gradient">Ample Group Global</span>
+                  Discover Your Sustainable Investment Path with <span className="text-gold-gradient">Ample Group Global</span>
                 </>
               )}
             </h2>
-            <p className="text-sm sm:text-base md:text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed px-4">
+            <p className="text-xs sm:text-sm md:text-base text-gray-300 max-w-2xl mx-auto leading-relaxed px-4">
               {t('home.hero.subtitle')}
             </p>
           </div>
 
           {/* Feature Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 md:gap-6 mt-10 sm:mt-12 md:mt-16">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4 mt-4 sm:mt-6 md:mt-8">
             {features.map((feature, index) => (
               <div
                 key={index}
-                className={`group card-amg-premium p-4 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl text-left animate-slide-up opacity-0`}
+                className={`group card-amg-premium p-3 sm:p-4 rounded-lg sm:rounded-xl text-left animate-slide-up opacity-0`}
                 style={{ animationDelay: `${0.3 + index * 0.1}s` }}
               >
                 <div className="relative">
                   <div className="absolute -inset-2 bg-[#c9a962]/20 rounded-xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                  <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-[#0a1628] border border-[#c9a962]/30 group-hover:border-[#c9a962]/50 flex items-center justify-center mb-3 sm:mb-4 transition-all duration-500">
-                    <DynamicIcon name={t(feature.iconKey)} size={20} className="text-[#c9a962] sm:w-6 sm:h-6" />
+                  <div className="relative w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-[#0a1628] border border-[#c9a962]/30 group-hover:border-[#c9a962]/50 flex items-center justify-center mb-2 sm:mb-3 transition-all duration-500">
+                    <DynamicIcon name={t(feature.iconKey)} size={16} className="text-[#c9a962] sm:w-5 sm:h-5" />
                   </div>
                 </div>
-                <h3 className="font-bold text-white text-sm sm:text-base mb-1.5 sm:mb-2 group-hover:text-[#c9a962] transition-colors duration-300">
+                <h3 className="font-bold text-white text-xs sm:text-sm mb-1 group-hover:text-[#c9a962] transition-colors duration-300">
                   {t(feature.titleKey)}
                 </h3>
-                <p className="text-xs sm:text-sm text-gray-300 leading-relaxed">{t(feature.descKey)}</p>
+                <p className="text-[10px] sm:text-xs text-gray-300 leading-relaxed line-clamp-2">{t(feature.descKey)}</p>
               </div>
             ))}
           </div>
 
           {/* CTA Section */}
-          <div className="mt-10 sm:mt-12 md:mt-16 space-y-4 sm:space-y-6 animate-slide-up opacity-0" style={{ animationDelay: '0.7s' }}>
-            <div className="flex items-center justify-center gap-2 sm:gap-3">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#1a2744] border border-[#c9a962]/30 flex items-center justify-center">
-                <DynamicIcon name={t('ui.icon.time')} size={14} className="text-[#c9a962] sm:w-4 sm:h-4" />
+          <div className="mt-4 sm:mt-6 md:mt-8 space-y-2 sm:space-y-3 animate-slide-up opacity-0" style={{ animationDelay: '0.7s' }}>
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-[#1a2744] border border-[#c9a962]/30 flex items-center justify-center">
+                <DynamicIcon name={t('ui.icon.time')} size={12} className="text-[#c9a962] sm:w-3.5 sm:h-3.5" />
               </div>
               <span className="text-xs sm:text-sm text-gray-300">{t('home.cta.time')}</span>
             </div>
@@ -503,29 +504,26 @@ export default function Home() {
               onClick={handleStartAssessment}
               className="group relative inline-flex items-center justify-center"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-[#c9a962] to-[#d4b87a] rounded-xl sm:rounded-2xl blur-xl opacity-50 group-hover:opacity-75 transition-opacity duration-500"></div>
-              <div className="relative px-6 sm:px-8 md:px-10 py-3 sm:py-4 bg-gradient-to-r from-[#c9a962] to-[#d4b87a] rounded-lg sm:rounded-xl text-[#0a1628] font-bold text-sm sm:text-base transition-all duration-300 hover:shadow-2xl hover:shadow-[#c9a962]/30 transform hover:-translate-y-1">
+              <div className="absolute inset-0 bg-gradient-to-r from-[#c9a962] to-[#d4b87a] rounded-lg sm:rounded-xl blur-xl opacity-50 group-hover:opacity-75 transition-opacity duration-500"></div>
+              <div className="relative px-6 sm:px-8 py-2.5 sm:py-3 bg-gradient-to-r from-[#c9a962] to-[#d4b87a] rounded-lg sm:rounded-xl text-[#0a1628] font-bold text-sm sm:text-base transition-all duration-300 hover:shadow-2xl hover:shadow-[#c9a962]/30 transform hover:-translate-y-1">
                 {t('home.cta.button')}
               </div>
             </button>
           </div>
 
-          {/* Benefits Section */}
-          <div className="mt-12 sm:mt-16 md:mt-20 pt-8 sm:pt-10 md:pt-12 border-t border-white/10">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
+          {/* Benefits Section - Compact horizontal layout */}
+          <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-white/10">
+            <div className="flex flex-wrap justify-center gap-3 sm:gap-6 md:gap-8">
               {benefits.map((benefit, index) => (
                 <div
                   key={index}
-                  className="text-left animate-slide-up opacity-0"
+                  className="flex items-center gap-2 animate-slide-up opacity-0"
                   style={{ animationDelay: `${0.8 + index * 0.1}s` }}
                 >
-                  <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#c9a962]/20 border border-[#c9a962]/40 flex items-center justify-center flex-shrink-0">
-                      <DynamicIcon name={t('ui.icon.check')} size={14} className="text-[#c9a962] sm:w-4 sm:h-4" />
-                    </div>
-                    <span className="font-bold text-white text-sm sm:text-base">{t(benefit.titleKey)}</span>
+                  <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-[#c9a962]/20 border border-[#c9a962]/40 flex items-center justify-center flex-shrink-0">
+                    <DynamicIcon name={t('ui.icon.check')} size={10} className="text-[#c9a962] sm:w-3 sm:h-3" />
                   </div>
-                  <p className="text-xs sm:text-sm text-gray-300 leading-relaxed pl-9 sm:pl-11">{t(benefit.descKey)}</p>
+                  <span className="text-xs sm:text-sm text-gray-300">{t(benefit.titleKey)}</span>
                 </div>
               ))}
             </div>
@@ -533,14 +531,14 @@ export default function Home() {
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="relative z-10 border-t border-white/10 py-6 sm:py-8 mt-8 sm:mt-12">
+      {/* Footer - More compact */}
+      <footer className="relative z-10 border-t border-white/10 py-3 sm:py-4 mt-4 sm:mt-6">
         <div className="container">
-          <div className="flex flex-col items-center justify-center gap-3 sm:gap-4 md:flex-row md:justify-between">
+          <div className="flex flex-col items-center justify-center gap-2 sm:gap-3 md:flex-row md:justify-between">
             <div className="flex items-center">
-              <Image src="/logo.png" alt="Ample Group Global" width={120} height={30} className="object-contain sm:w-[140px] sm:h-[35px]" />
+              <Image src="/logo.png" alt="Ample Group Global" width={100} height={25} className="object-contain sm:w-[120px] sm:h-[30px]" />
             </div>
-            <p className="text-xs sm:text-sm text-gray-400 text-center">
+            <p className="text-[10px] sm:text-xs text-gray-400 text-center">
               {t('home.footer')} © {new Date().getFullYear()}
             </p>
           </div>
