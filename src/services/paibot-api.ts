@@ -25,33 +25,6 @@ export interface AppConfigDto {
   maintenanceMessage: string | null;
 }
 
-export interface EsgProfileDto {
-  e: number;
-  s: number;
-  g: number;
-}
-
-export interface InvestmentTrackDto {
-  id: string;
-  name: string;
-  nameEn: string;
-  description: string | null;
-  riskLevel: number;
-  timeHorizon: number;
-  sdgs: number[];
-  esgProfile: EsgProfileDto;
-  sectors: string[];
-  examples: string[];
-}
-
-export interface SDGDefinitionDto {
-  id: number;
-  name: string;
-  nameEn: string;
-  icon: string;
-  colorHex: string | null;
-}
-
 export interface AssessmentStageDto {
   key: string;
   name: string;
@@ -64,8 +37,6 @@ export interface AssessmentStageDto {
 export interface MasterDataDto {
   languages: LanguageDto[];
   config: AppConfigDto;
-  investmentTracks: InvestmentTrackDto[];
-  sdgDefinitions: Record<number, SDGDefinitionDto>;
   stages: Record<string, AssessmentStageDto>;
   translations: Record<string, Record<string, Record<string, string>>>;
 }
@@ -117,24 +88,6 @@ class PAIBotApiService {
   // ============ App Config ============
   async getAppConfig(): Promise<AppConfigDto | null> {
     return this.fetchWithCache<AppConfigDto>('/PAIBotAppConfig', 'appConfig');
-  }
-
-  // ============ Investment Tracks ============
-  async getInvestmentTracks(language: string = 'en'): Promise<InvestmentTrackDto[]> {
-    const data = await this.fetchWithCache<InvestmentTrackDto[]>(
-      `/PAIBotInvestmentTracks?language=${language}`,
-      `investmentTracks_${language}`
-    );
-    return data || [];
-  }
-
-  // ============ SDG Definitions ============
-  async getSDGDefinitions(language: string = 'en'): Promise<Record<number, SDGDefinitionDto>> {
-    const data = await this.fetchWithCache<Record<number, SDGDefinitionDto>>(
-      `/PAIBotSDGDefinitions?language=${language}`,
-      `sdgDefinitions_${language}`
-    );
-    return data || {};
   }
 
   // ============ Assessment Stages ============

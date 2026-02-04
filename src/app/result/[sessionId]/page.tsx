@@ -15,6 +15,20 @@ interface ApiResponse<T> {
   error?: string;
 }
 
+interface InvestorMBTI {
+  gs?: { score: number; letter: string };
+  di?: { score: number; letter: string };
+  lv?: { score: number; letter: string };
+  pa?: { score: number; letter: string };
+  type_code?: string;
+  type_name?: string;
+  type_name_en?: string;
+  strengths?: string[];
+  strengths_en?: string[];
+  blind_spots?: string[];
+  blind_spots_en?: string[];
+}
+
 interface AssessmentResult {
   sessionId: string;
   investorProfile: {
@@ -24,31 +38,7 @@ interface AssessmentResult {
     watchPoints: string[];
   };
   scores: {
-    risk?: { raw: number; confidence: number };
-    timeHorizon?: { raw: number; confidence: number };
-    goalType?: string;
-    biases?: Array<{ type: string; strength: string; evidence: string }>;
-    esg?: { environmental: number; social: number; governance: number };
-    sdgPriorities?: number[];
-  };
-  recommendedTracks: Array<{
-    rank: number;
-    trackId: string;
-    trackName: string;
-    trackNameEn?: string;
-    description?: string;
-    matchScore: number;
-    reason?: string;
-    sdgs?: number[];
-    examples?: string[];
-  }>;
-  behavioralInsights?: {
-    mainBiases: string[];
-    suggestions: string[];
-  };
-  sdgAlignment?: {
-    primarySDGs: number[];
-    explanation: string;
+    investor_mbti?: InvestorMBTI;
   };
 }
 
@@ -68,7 +58,7 @@ async function getResult(apiUrl: string, sessionId: string): Promise<ApiResponse
 export default function ResultPage() {
   const params = useParams<{ sessionId: string }>();
   const router = useRouter();
-  const { language, setLanguage, languages, t, sdgDefinitions } = useMasterData();
+  const { language, setLanguage, languages, t } = useMasterData();
   const sessionId = params.sessionId;
 
   const [result, setResult] = useState<AssessmentResult | null>(null);
@@ -145,13 +135,56 @@ export default function ResultPage() {
     );
   }
 
-  const { investorProfile, scores, recommendedTracks, sdgAlignment } = result;
-  const sdgNames = Object.fromEntries(
-    Object.entries(sdgDefinitions).map(([id, sdg]) => [
-      parseInt(id),
-      { name: sdg.name, nameEn: sdg.nameEn, icon: sdg.icon }
-    ])
-  );
+  const { investorProfile, scores } = result;
+  const investorMBTI = scores.investor_mbti;
+
+  // MBTI dimension labels
+  const mbtiDimensions = {
+    gs: {
+      labelZh: '風險取向',
+      labelEn: 'Risk Orientation',
+      leftZh: '穩健型',
+      leftEn: 'Stability',
+      rightZh: '積極型',
+      rightEn: 'Growth',
+      leftLetter: 'S',
+      rightLetter: 'G',
+      color: 'from-blue-500 to-cyan-400'
+    },
+    di: {
+      labelZh: '分析方法',
+      labelEn: 'Analysis Method',
+      leftZh: '直覺型',
+      leftEn: 'Intuition',
+      rightZh: '數據型',
+      rightEn: 'Data',
+      leftLetter: 'I',
+      rightLetter: 'D',
+      color: 'from-purple-500 to-pink-400'
+    },
+    lv: {
+      labelZh: '決策風格',
+      labelEn: 'Decision Style',
+      leftZh: '價值型',
+      leftEn: 'Values',
+      rightZh: '邏輯型',
+      rightEn: 'Logic',
+      leftLetter: 'V',
+      rightLetter: 'L',
+      color: 'from-orange-500 to-yellow-400'
+    },
+    pa: {
+      labelZh: '行動模式',
+      labelEn: 'Action Mode',
+      leftZh: '適應型',
+      leftEn: 'Adaptive',
+      rightZh: '計劃型',
+      rightEn: 'Planner',
+      leftLetter: 'A',
+      rightLetter: 'P',
+      color: 'from-green-500 to-emerald-400'
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#0a1628]">
@@ -176,163 +209,123 @@ export default function ResultPage() {
       </header>
 
       <main className="container py-4 sm:py-6 md:py-8 max-w-5xl space-y-4 sm:space-y-6 md:space-y-8 px-3 sm:px-4">
-        {/* Profile Card */}
-        <Card className="p-4 sm:p-6 md:p-8 bg-gradient-to-r from-[#c9a962] to-[#d4b87a] border-0">
-          <div className="space-y-3 sm:space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#0a1628]/20 flex items-center justify-center flex-shrink-0">
-                <span className="text-2xl sm:text-3xl">👤</span>
-              </div>
-              <div>
-                <h2 className="text-xl sm:text-2xl font-bold text-[#0a1628]">{investorProfile.type}</h2>
-                <p className="text-sm sm:text-base text-[#0a1628]/80">{investorProfile.summary}</p>
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        {/* Scores Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-          <Card className="p-4 sm:p-6 space-y-3 sm:space-y-4 bg-[#1a2744] border-[#334155]">
-            <h3 className="text-base sm:text-lg font-semibold text-white flex items-center gap-2">
-              <span>📊</span>
-              <span>{t('result.scores.risk.title')}</span>
-            </h3>
-            <div className="space-y-3 sm:space-y-4">
-              <div>
-                <div className="flex justify-between text-xs sm:text-sm mb-1.5">
-                  <span className="text-gray-400">{t('result.scores.risk.tolerance')}</span>
-                  <span className="font-semibold text-[#c9a962]">{Math.round(scores.risk?.raw || 0)}/100</span>
-                </div>
-                <div className="h-2 sm:h-2.5 bg-[#0a1628] rounded-full overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-[#c9a962] to-[#d4b87a] rounded-full transition-all" style={{ width: `${Math.round(scores.risk?.raw || 0)}%` }} />
-                </div>
-              </div>
-              <div>
-                <div className="flex justify-between text-xs sm:text-sm mb-1.5">
-                  <span className="text-gray-400">{t('result.scores.risk.horizon')}</span>
-                  <span className="font-semibold text-green-400">{Math.round(scores.timeHorizon?.raw || 0)}/100</span>
-                </div>
-                <div className="h-2 sm:h-2.5 bg-[#0a1628] rounded-full overflow-hidden">
-                  <div className="h-full bg-green-500 rounded-full transition-all" style={{ width: `${Math.round(scores.timeHorizon?.raw || 0)}%` }} />
-                </div>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-4 sm:p-6 space-y-3 sm:space-y-4 bg-[#1a2744] border-[#334155]">
-            <h3 className="text-base sm:text-lg font-semibold text-white flex items-center gap-2">
-              <span>🌱</span>
-              <span>{t('result.scores.esg.title')}</span>
-            </h3>
-            <div className="space-y-3 sm:space-y-4">
-              <div>
-                <div className="flex justify-between text-xs sm:text-sm mb-1.5">
-                  <span className="text-gray-400">{t('result.scores.esg.environmental')}</span>
-                  <span className="font-semibold text-green-400">{Math.round(scores.esg?.environmental || 0)}/100</span>
-                </div>
-                <div className="h-2 sm:h-2.5 bg-[#0a1628] rounded-full overflow-hidden">
-                  <div className="h-full bg-green-500 rounded-full transition-all" style={{ width: `${Math.round(scores.esg?.environmental || 0)}%` }} />
-                </div>
-              </div>
-              <div>
-                <div className="flex justify-between text-xs sm:text-sm mb-1.5">
-                  <span className="text-gray-400">{t('result.scores.esg.social')}</span>
-                  <span className="font-semibold text-orange-400">{Math.round(scores.esg?.social || 0)}/100</span>
-                </div>
-                <div className="h-2 sm:h-2.5 bg-[#0a1628] rounded-full overflow-hidden">
-                  <div className="h-full bg-orange-500 rounded-full transition-all" style={{ width: `${Math.round(scores.esg?.social || 0)}%` }} />
-                </div>
-              </div>
-              <div>
-                <div className="flex justify-between text-xs sm:text-sm mb-1.5">
-                  <span className="text-gray-400">{t('result.scores.esg.governance')}</span>
-                  <span className="font-semibold text-purple-400">{Math.round(scores.esg?.governance || 0)}/100</span>
-                </div>
-                <div className="h-2 sm:h-2.5 bg-[#0a1628] rounded-full overflow-hidden">
-                  <div className="h-full bg-purple-500 rounded-full transition-all" style={{ width: `${Math.round(scores.esg?.governance || 0)}%` }} />
-                </div>
-              </div>
-            </div>
-          </Card>
-        </div>
-
-        {/* Recommended Tracks */}
-        {recommendedTracks && recommendedTracks.length > 0 && (
-          <div className="space-y-3 sm:space-y-4">
-            <h2 className="text-xl sm:text-2xl font-bold text-white">{t('result.tracks.title')}</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {recommendedTracks.map((track) => (
-                <Card key={track.trackId} className="p-4 sm:p-6 space-y-3 sm:space-y-4 bg-[#1a2744] border-[#334155] hover:border-[#c9a962]/50 transition-colors">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="space-y-1 flex-1 min-w-0">
-                      <div className="text-xs text-[#c9a962]">#{track.rank}</div>
-                      <h3 className="text-base sm:text-lg font-bold text-white truncate">{language === 'zh' ? track.trackName : track.trackNameEn}</h3>
-                      <p className="text-xs sm:text-sm text-gray-400 truncate">{language === 'zh' ? track.trackNameEn : track.trackName}</p>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <div className="text-xl sm:text-2xl font-bold text-[#c9a962]">{Math.round(track.matchScore)}%</div>
-                      <div className="text-[10px] sm:text-xs text-gray-500">{t('result.tracks.match')}</div>
-                    </div>
+        {/* MBTI Personality Type Card */}
+        {investorMBTI?.type_code && (
+          <Card className="p-4 sm:p-6 md:p-8 bg-gradient-to-r from-[#c9a962] to-[#d4b87a] border-0">
+            <div className="space-y-4 sm:space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-[#0a1628] flex items-center justify-center flex-shrink-0 shadow-lg">
+                    <span className="text-2xl sm:text-3xl font-bold text-[#c9a962] tracking-wider">{investorMBTI.type_code}</span>
                   </div>
+                  <div>
+                    <h2 className="text-xl sm:text-2xl font-bold text-[#0a1628]">
+                      {language === 'zh' ? investorMBTI.type_name : (investorMBTI.type_name_en || investorMBTI.type_name)}
+                    </h2>
+                    <p className="text-sm sm:text-base text-[#0a1628]/70">
+                      {language === 'zh' ? (investorMBTI.type_name_en || '') : investorMBTI.type_name}
+                    </p>
+                  </div>
+                </div>
+              </div>
 
-                  {track.description && <p className="text-xs sm:text-sm text-gray-300 line-clamp-2">{track.description}</p>}
+              {/* Four Dimensions */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                {(['gs', 'di', 'lv', 'pa'] as const).map((dim) => {
+                  const dimension = mbtiDimensions[dim];
+                  const data = investorMBTI[dim];
+                  if (!data) return null;
 
-                  {track.reason && (
-                    <div className="space-y-1">
-                      <div className="text-xs font-semibold text-gray-400">{t('result.tracks.reason')}</div>
-                      <p className="text-xs sm:text-sm text-gray-300 line-clamp-2">{track.reason}</p>
-                    </div>
-                  )}
+                  const isRight = data.letter === dimension.rightLetter;
+                  const rawScore = data.score ?? 0;
+                  // Normalize 0-2 score to percentage: (score / 2) * 100
+                  const normalizedPercent = (rawScore / 2) * 100;
+                  const percentage = isRight ? normalizedPercent : (100 - normalizedPercent);
 
-                  {track.sdgs && track.sdgs.length > 0 && (
-                    <div className="space-y-1.5">
-                      <div className="text-xs font-semibold text-gray-400">{t('result.tracks.sdg')}</div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {track.sdgs.slice(0, 4).map((sdgId: number) => (
-                          <div key={sdgId} className="px-2 py-1 bg-[#0a1628] text-[#c9a962] rounded text-[10px] sm:text-xs flex items-center gap-1">
-                            <span>{sdgNames[sdgId]?.icon}</span>
-                            <span>SDG {sdgId}</span>
-                          </div>
-                        ))}
+                  return (
+                    <div key={dim} className="bg-[#0a1628]/10 rounded-xl p-3 sm:p-4">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-xs sm:text-sm font-medium text-[#0a1628]/80">
+                          {language === 'zh' ? dimension.labelZh : dimension.labelEn}
+                        </span>
+                        <span className="text-xs sm:text-sm font-bold text-[#0a1628] bg-white/50 px-2 py-0.5 rounded">
+                          {data.letter}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[10px] sm:text-xs">
+                        <span className={`font-medium ${!isRight ? 'text-[#0a1628]' : 'text-[#0a1628]/50'}`}>
+                          {language === 'zh' ? dimension.leftZh : dimension.leftEn}
+                        </span>
+                        <div className="flex-1 h-2 bg-[#0a1628]/20 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full bg-gradient-to-r ${dimension.color} rounded-full transition-all`}
+                            style={{ width: `${percentage}%` }}
+                          />
+                        </div>
+                        <span className={`font-medium ${isRight ? 'text-[#0a1628]' : 'text-[#0a1628]/50'}`}>
+                          {language === 'zh' ? dimension.rightZh : dimension.rightEn}
+                        </span>
                       </div>
                     </div>
-                  )}
+                  );
+                })}
+              </div>
 
-                  {track.examples && track.examples.length > 0 && (
-                    <div className="space-y-1.5">
-                      <div className="text-xs font-semibold text-gray-400">{t('result.tracks.examples')}</div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {track.examples.slice(0, 3).map((example: string, idx: number) => (
-                          <div key={idx} className="px-2 py-1 bg-[#0a1628] text-gray-300 rounded text-[10px] sm:text-xs">{example}</div>
+              {/* Strengths & Blind Spots */}
+              {((investorMBTI.strengths && investorMBTI.strengths.length > 0) ||
+                (investorMBTI.blind_spots && investorMBTI.blind_spots.length > 0)) && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pt-2">
+                  {investorMBTI.strengths && investorMBTI.strengths.length > 0 && (
+                    <div className="bg-green-900/20 rounded-xl p-3 sm:p-4">
+                      <h4 className="text-sm font-semibold text-[#0a1628] mb-2 flex items-center gap-1">
+                        <span>💪</span>
+                        {language === 'zh' ? '優勢' : 'Strengths'}
+                      </h4>
+                      <ul className="space-y-1">
+                        {(language === 'zh' ? investorMBTI.strengths : (investorMBTI.strengths_en || investorMBTI.strengths))?.map((item, idx) => (
+                          <li key={idx} className="text-xs sm:text-sm text-[#0a1628]/80 flex items-start gap-1">
+                            <span className="text-green-700">•</span>
+                            {item}
+                          </li>
                         ))}
-                      </div>
+                      </ul>
                     </div>
                   )}
-                </Card>
-              ))}
+                  {investorMBTI.blind_spots && investorMBTI.blind_spots.length > 0 && (
+                    <div className="bg-amber-900/20 rounded-xl p-3 sm:p-4">
+                      <h4 className="text-sm font-semibold text-[#0a1628] mb-2 flex items-center gap-1">
+                        <span>👁️</span>
+                        {language === 'zh' ? '盲點' : 'Blind Spots'}
+                      </h4>
+                      <ul className="space-y-1">
+                        {(language === 'zh' ? investorMBTI.blind_spots : (investorMBTI.blind_spots_en || investorMBTI.blind_spots))?.map((item, idx) => (
+                          <li key={idx} className="text-xs sm:text-sm text-[#0a1628]/80 flex items-start gap-1">
+                            <span className="text-amber-700">•</span>
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-          </div>
+          </Card>
         )}
 
-        {/* SDG Alignment */}
-        {sdgAlignment?.primarySDGs && sdgAlignment.primarySDGs.length > 0 && (
-          <Card className="p-4 sm:p-6 space-y-3 sm:space-y-4 bg-[#1a2744] border-[#334155]">
-            <h3 className="text-base sm:text-lg font-semibold text-white flex items-center gap-2">
-              <span>🎯</span>
-              <span>{t('result.sdg.title')}</span>
-            </h3>
-            <p className="text-xs sm:text-sm text-gray-400">{sdgAlignment.explanation}</p>
-            <div className="flex flex-wrap gap-2 sm:gap-3">
-              {sdgAlignment.primarySDGs.map((sdgId: number) => (
-                <div key={sdgId} className="flex items-center gap-2 px-3 py-2 bg-[#0a1628] border border-[#334155] rounded-lg">
-                  <span className="text-xl sm:text-2xl">{sdgNames[sdgId]?.icon}</span>
-                  <div>
-                    <div className="font-semibold text-xs sm:text-sm text-white">SDG {sdgId}</div>
-                    <div className="text-[10px] sm:text-xs text-gray-400">{language === 'zh' ? sdgNames[sdgId]?.name : sdgNames[sdgId]?.nameEn}</div>
-                  </div>
+        {/* Profile Card (Fallback if no MBTI) */}
+        {!investorMBTI?.type_code && (
+          <Card className="p-4 sm:p-6 md:p-8 bg-gradient-to-r from-[#c9a962] to-[#d4b87a] border-0">
+            <div className="space-y-3 sm:space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#0a1628]/20 flex items-center justify-center flex-shrink-0">
+                  <span className="text-2xl sm:text-3xl">👤</span>
                 </div>
-              ))}
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-bold text-[#0a1628]">{investorProfile.type}</h2>
+                  <p className="text-sm sm:text-base text-[#0a1628]/80">{investorProfile.summary}</p>
+                </div>
+              </div>
             </div>
           </Card>
         )}

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { paibotApi, MasterDataDto, LanguageDto, InvestmentTrackDto, SDGDefinitionDto, AssessmentStageDto, AppConfigDto } from '@/services/paibot-api';
+import { paibotApi, MasterDataDto, LanguageDto, AssessmentStageDto, AppConfigDto } from '@/services/paibot-api';
 
 interface MasterDataContextType {
   masterData: MasterDataDto | null;
@@ -13,8 +13,6 @@ interface MasterDataContextType {
   t: (key: string) => string;
   reload: () => Promise<void>;
   config: AppConfigDto | null;
-  investmentTracks: InvestmentTrackDto[];
-  sdgDefinitions: Record<number, SDGDefinitionDto>;
   stages: Record<string, AssessmentStageDto>;
   getAppTitle: () => string;
 }
@@ -95,8 +93,6 @@ export function MasterDataProvider({ children }: MasterDataProviderProps) {
 
   // Convenience getters
   const config = masterData?.config || null;
-  const investmentTracks = masterData?.investmentTracks || [];
-  const sdgDefinitions = masterData?.sdgDefinitions || {};
   const stages = masterData?.stages || {};
 
   const value: MasterDataContextType = {
@@ -109,8 +105,6 @@ export function MasterDataProvider({ children }: MasterDataProviderProps) {
     t,
     reload,
     config,
-    investmentTracks,
-    sdgDefinitions,
     stages,
     getAppTitle,
   };
