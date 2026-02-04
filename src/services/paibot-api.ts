@@ -71,10 +71,8 @@ class PAIBotApiService {
         this.cache.set(cacheKey, { data: result.data, timestamp: Date.now() });
         return result.data;
       }
-      console.error('API Error:', result.error);
       return null;
-    } catch (error) {
-      console.error('Fetch Error:', error);
+    } catch {
       return null;
     }
   }
@@ -129,8 +127,7 @@ class PAIBotApiService {
       });
       const result = await response.json();
       return result.success === true;
-    } catch (error) {
-      console.error('Clear cache error:', error);
+    } catch {
       return false;
     }
   }

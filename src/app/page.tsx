@@ -33,21 +33,6 @@ function isTokenExpired(token: string): boolean {
   return Date.now() >= payload.exp * 1000;
 }
 
-// AMG Logo Component
-const AMGLogo = ({ size = 'default' }: { size?: 'small' | 'default' | 'large' }) => {
-  const dimensions = {
-    small: { width: 120, height: 30 },
-    default: { width: 150, height: 38 },
-    large: { width: 200, height: 50 },
-  };
-  const { width, height } = dimensions[size];
-  return (
-    <div className="relative group">
-      <Image src="/logo.png" alt="Ample Group Global" width={width} height={height} className="object-contain" />
-    </div>
-  );
-};
-
 export default function Home() {
   const router = useRouter();
   const { language, setLanguage, languages, t, isLoading } = useMasterData();

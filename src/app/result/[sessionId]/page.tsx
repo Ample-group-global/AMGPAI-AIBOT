@@ -7,53 +7,7 @@ import { useState, useEffect } from 'react';
 import { defaultConfig } from '@/config';
 import { useMasterData } from '@/contexts/MasterDataContext';
 import Image from 'next/image';
-
-interface ApiResponse<T> {
-  success: boolean;
-  message?: string;
-  data?: T;
-  error?: string;
-}
-
-interface InvestorMBTI {
-  gs?: { score: number; letter: string };
-  di?: { score: number; letter: string };
-  lv?: { score: number; letter: string };
-  pa?: { score: number; letter: string };
-  type_code?: string;
-  type_name?: string;
-  type_name_en?: string;
-  strengths?: string[];
-  strengths_en?: string[];
-  blind_spots?: string[];
-  blind_spots_en?: string[];
-}
-
-interface AssessmentResult {
-  sessionId: string;
-  investorProfile: {
-    type: string;
-    summary: string;
-    strengths: string[];
-    watchPoints: string[];
-  };
-  scores: {
-    investor_mbti?: InvestorMBTI;
-  };
-}
-
-async function getResult(apiUrl: string, sessionId: string): Promise<ApiResponse<AssessmentResult>> {
-  try {
-    const response = await fetch(`${apiUrl}/GetResult/${sessionId}`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    return await response.json() as ApiResponse<AssessmentResult>;
-  } catch (error) {
-    console.error('[API Error]', error);
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
-  }
-}
+import { AssessmentResult, getResult } from '@/types/assessment';
 
 export default function ResultPage() {
   const params = useParams<{ sessionId: string }>();
@@ -82,7 +36,6 @@ export default function ResultPage() {
         }
       })
       .catch((err) => {
-        console.error('[Result] Error fetching result:', err);
         setError(err.message || 'Unknown error');
       })
       .finally(() => {

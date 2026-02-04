@@ -42,9 +42,8 @@ export function MasterDataProvider({ children }: MasterDataProviderProps) {
       } else {
         setError('Failed to load data from API');
       }
-    } catch (err) {
+    } catch {
       setError('Failed to connect to API');
-      console.error('MasterData load error:', err);
     } finally {
       setIsLoading(false);
     }

@@ -17,6 +17,7 @@ import { defaultConfig } from '@/config';
 import { useMasterData } from '@/contexts/MasterDataContext';
 import { DynamicIcon } from '@/components/DynamicIcon';
 import Image from 'next/image';
+import { ApiResponse, InvestorMBTI, AssessmentResult, MBTI_DIMENSIONS, getResult } from '@/types/assessment';
 
 const SparklesIcon = ({ className = "h-4 w-4" }: { className?: string }) => (
   <svg className={className} fill="currentColor" viewBox="0 0 24 24">
@@ -47,46 +48,12 @@ interface AuthUser {
   role: string;
 }
 
-interface ApiResponse<T> {
-  success: boolean;
-  message?: string;
-  data?: T;
-  error?: string;
-}
-
 interface StartSessionResponse {
   sessionId: string;
   question: string;
   stage: string;
   progress: number;
   options?: string[];
-}
-
-interface InvestorMBTI {
-  gs?: { score: number; letter: string };
-  di?: { score: number; letter: string };
-  lv?: { score: number; letter: string };
-  pa?: { score: number; letter: string };
-  type_code?: string;
-  type_name?: string;
-  type_name_en?: string;
-  strengths?: string[];
-  strengths_en?: string[];
-  blind_spots?: string[];
-  blind_spots_en?: string[];
-}
-
-interface AssessmentResult {
-  sessionId: string;
-  investorProfile: {
-    type: string;
-    summary: string;
-    strengths: string[];
-    watchPoints: string[];
-  };
-  scores: {
-    investor_mbti?: InvestorMBTI;
-  };
 }
 
 interface ChatResponse {
@@ -115,7 +82,6 @@ async function apiCall<T>(url: string, options?: RequestInit): Promise<ApiRespon
     });
     return await response.json() as ApiResponse<T>;
   } catch (error) {
-    console.error('[API Error]', error);
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
@@ -131,12 +97,6 @@ async function sendChat(apiUrl: string, sessionId: string, message: string, lang
   return apiCall<ChatResponse>(`${apiUrl}/Chat`, {
     method: 'POST',
     body: JSON.stringify({ sessionId, message, language }),
-  });
-}
-
-async function getResult(apiUrl: string, sessionId: string): Promise<ApiResponse<AssessmentResult>> {
-  return apiCall<AssessmentResult>(`${apiUrl}/GetResult/${sessionId}`, {
-    method: 'GET',
   });
 }
 
@@ -172,50 +132,6 @@ const ASSESSMENT_STAGES = [
   { key: 'dimension_pa', icon: 'P', label: { en: 'P/A', zh: 'P/A' } },
   { key: 'complete', icon: '★', label: { en: 'Result', zh: '结果' } },
 ];
-
-// MBTI dimension labels for result display
-const MBTI_DIMENSIONS = {
-  gs: {
-    labelZh: '風險取向',
-    labelEn: 'Risk Orientation',
-    leftZh: '穩健型',
-    leftEn: 'Stability',
-    rightZh: '積極型',
-    rightEn: 'Growth',
-    leftLetter: 'S',
-    rightLetter: 'G',
-  },
-  di: {
-    labelZh: '分析方法',
-    labelEn: 'Analysis Method',
-    leftZh: '直覺型',
-    leftEn: 'Intuition',
-    rightZh: '數據型',
-    rightEn: 'Data',
-    leftLetter: 'I',
-    rightLetter: 'D',
-  },
-  lv: {
-    labelZh: '決策風格',
-    labelEn: 'Decision Style',
-    leftZh: '價值型',
-    leftEn: 'Values',
-    rightZh: '邏輯型',
-    rightEn: 'Logic',
-    leftLetter: 'V',
-    rightLetter: 'L',
-  },
-  pa: {
-    labelZh: '行動模式',
-    labelEn: 'Action Mode',
-    leftZh: '適應型',
-    leftEn: 'Adaptive',
-    rightZh: '計劃型',
-    rightEn: 'Planner',
-    leftLetter: 'A',
-    rightLetter: 'P',
-  }
-};
 
 function getStageIndex(currentStage: string): number {
   if (currentStage === 'welcome') return 0;
@@ -345,25 +261,13 @@ export default function AssessmentPage() {
   useEffect(() => {
     if (isComplete && sessionId && !assessmentResult && !isLoadingResult) {
       setIsLoadingResult(true);
-      console.log('[Assessment] Fetching result for session:', sessionId);
       getResult(config.assessmentApiUrl, sessionId)
         .then((response) => {
-          console.log('[Assessment] Result response:', response);
           if (response.success && response.data) {
-            const mbti = response.data.scores?.investor_mbti;
-            console.log('[Assessment] MBTI Raw API Result:', JSON.stringify(mbti, null, 2));
-            console.log('[Assessment] Raw Scores - GS:', mbti?.gs?.score, '(' + mbti?.gs?.letter + ')',
-              'DI:', mbti?.di?.score, '(' + mbti?.di?.letter + ')',
-              'LV:', mbti?.lv?.score, '(' + mbti?.lv?.letter + ')',
-              'PA:', mbti?.pa?.score, '(' + mbti?.pa?.letter + ')');
-            console.log('[Assessment] Type:', mbti?.type_code, mbti?.type_name, mbti?.type_name_en);
-            console.log('[Assessment] Score scale: 0=fully left, 1=mixed, 2=fully right (out of 2 questions)');
             setAssessmentResult(response.data);
           }
         })
-        .catch((err) => {
-          console.error('[Result] Error fetching result:', err);
-        })
+        .catch(() => {})
         .finally(() => {
           setIsLoadingResult(false);
         });
