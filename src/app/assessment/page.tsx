@@ -378,7 +378,7 @@ export default function AssessmentPage() {
   // Render Result View
   if (isComplete && assessmentResult) {
     return (
-      <div className="min-h-screen bg-[#0a1628]">
+      <div key="result" className="min-h-screen bg-[#0a1628]">
         {/* Alert Dialog for Close */}
         <AlertDialog open={showCloseDialog} onOpenChange={setShowCloseDialog}>
           <AlertDialogContent className="bg-gradient-to-br from-[#1a2744] to-[#0a1628] border-[#334155] text-white max-w-[90vw] sm:max-w-sm rounded-2xl mx-4">
@@ -696,7 +696,7 @@ export default function AssessmentPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a1628] flex flex-col relative">
+    <div key="chat" className="min-h-screen bg-[#0a1628] flex flex-col relative">
       <AlertDialog open={showCloseDialog} onOpenChange={setShowCloseDialog}>
         <AlertDialogContent className="bg-gradient-to-br from-[#1a2744] to-[#0a1628] border-[#334155] text-white max-w-[90vw] sm:max-w-sm rounded-2xl mx-4">
           <AlertDialogHeader>

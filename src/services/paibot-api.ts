@@ -77,35 +77,6 @@ class PAIBotApiService {
     }
   }
 
-  // ============ Languages ============
-  async getLanguages(): Promise<LanguageDto[]> {
-    const data = await this.fetchWithCache<LanguageDto[]>('/PAIBotLanguages', 'languages');
-    return data || [];
-  }
-
-  // ============ App Config ============
-  async getAppConfig(): Promise<AppConfigDto | null> {
-    return this.fetchWithCache<AppConfigDto>('/PAIBotAppConfig', 'appConfig');
-  }
-
-  // ============ Assessment Stages ============
-  async getStages(language: string = 'en'): Promise<Record<string, AssessmentStageDto>> {
-    const data = await this.fetchWithCache<Record<string, AssessmentStageDto>>(
-      `/PAIBotStages?language=${language}`,
-      `stages_${language}`
-    );
-    return data || {};
-  }
-
-  // ============ Translations ============
-  async getTranslations(language: string): Promise<Record<string, Record<string, Record<string, string>>>> {
-    const data = await this.fetchWithCache<Record<string, Record<string, Record<string, string>>>>(
-      `/PAIBotTranslations/${language}`,
-      `translations_${language}`
-    );
-    return data || {};
-  }
-
   // ============ Master Data (All in One) ============
   async getMasterData(language: string = 'en'): Promise<MasterDataDto | null> {
     return this.fetchWithCache<MasterDataDto>(
@@ -119,7 +90,6 @@ class PAIBotApiService {
     this.cache.clear();
   }
 
-  // Call server to clear cache
   async clearServerCache(): Promise<boolean> {
     try {
       const response = await fetch(`${this.baseUrl}/PAIBotClearCache`, {
