@@ -99,13 +99,13 @@ async function sendChat(apiUrl: string, sessionId: string, message: string, lang
 
 
 const ASSESSMENT_STAGES = [
-  { key: 'welcome', icon: '1', label: { en: 'Start', zh: '开始' } },
-  { key: 'compliance', icon: '2', label: { en: 'Verify', zh: '验证' } },
-  { key: 'dimension_gs', icon: 'G', label: { en: 'G/S', zh: 'G/S' } },
-  { key: 'dimension_di', icon: 'D', label: { en: 'D/I', zh: 'D/I' } },
-  { key: 'dimension_lv', icon: 'L', label: { en: 'L/V', zh: 'L/V' } },
-  { key: 'dimension_pa', icon: 'P', label: { en: 'P/A', zh: 'P/A' } },
-  { key: 'complete', icon: '★', label: { en: 'Result', zh: '结果' } },
+  { key: 'welcome', icon: '1', labelKey: 'assessment.stageLabels.start' },
+  { key: 'compliance', icon: '2', labelKey: 'assessment.stageLabels.verify' },
+  { key: 'dimension_gs', icon: 'G', labelKey: 'assessment.stageLabels.gs' },
+  { key: 'dimension_di', icon: 'D', labelKey: 'assessment.stageLabels.di' },
+  { key: 'dimension_lv', icon: 'L', labelKey: 'assessment.stageLabels.lv' },
+  { key: 'dimension_pa', icon: 'P', labelKey: 'assessment.stageLabels.pa' },
+  { key: 'complete', icon: '★', labelKey: 'assessment.stageLabels.result' },
 ];
 
 function getStageIndex(currentStage: string): number {
@@ -127,20 +127,7 @@ export default function AssessmentPage() {
   const { language, setLanguage, languages, t, isLoading: isMasterDataLoading } = useMasterData();
 
   const getStageName = (stageKey: string): string => {
-    const stageNames: Record<string, { en: string; zh: string }> = {
-      welcome: { en: 'Welcome', zh: '欢迎' },
-      compliance_nationality: { en: 'Nationality Check', zh: '国籍确认' },
-      compliance_qualification: { en: 'Qualification Check', zh: '资格确认' },
-      dimension_gs: { en: 'Risk Orientation', zh: '风险取向' },
-      dimension_di: { en: 'Analysis Method', zh: '分析方式' },
-      dimension_lv: { en: 'Decision Style', zh: '决策风格' },
-      dimension_pa: { en: 'Action Mode', zh: '行动模式' },
-      summary: { en: 'Personality Report', zh: '性格报告' },
-      complete: { en: 'Complete', zh: '完成' },
-      rejected: { en: 'Assessment Ended', zh: '评估结束' },
-    };
-    const stage = stageNames[stageKey];
-    return stage ? (language === 'zh' ? stage.zh : stage.en) : stageKey;
+    return t(`assessment.stages.${stageKey}`) || stageKey;
   };
 
   const { user, isAuthenticated, isLoading: isAuthLoading, logout: authLogout } = useAuth();
@@ -235,7 +222,7 @@ export default function AssessmentPage() {
   useEffect(() => {
     if (isComplete && sessionId && !assessmentResult && !isLoadingResult) {
       setIsLoadingResult(true);
-      getResult(config.assessmentApiUrl, sessionId)
+      getResult(config.assessmentApiUrl, sessionId, language)
         .then((response) => {
           if (response.success && response.data) {
             setAssessmentResult(response.data);
@@ -246,7 +233,7 @@ export default function AssessmentPage() {
           setIsLoadingResult(false);
         });
     }
-  }, [isComplete, sessionId, assessmentResult, isLoadingResult, config.assessmentApiUrl]);
+  }, [isComplete, sessionId, assessmentResult, isLoadingResult, config.assessmentApiUrl, language]);
 
   const logout = async () => {
     await authLogout();
@@ -332,7 +319,7 @@ export default function AssessmentPage() {
             <span className="w-2 h-2 sm:w-3 sm:h-3 bg-[#c9a962] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
             <span className="w-2 h-2 sm:w-3 sm:h-3 bg-[#c9a962] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
           </div>
-          <p className="text-gray-400 font-medium text-sm sm:text-base">Loading Assessment...</p>
+          <p className="text-gray-400 font-medium text-sm sm:text-base">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -389,7 +376,7 @@ export default function AssessmentPage() {
                 <div className="w-9 h-9 xl:w-10 xl:h-10 rounded-xl bg-gradient-to-br from-[#c9a962] to-[#d4b87a] flex items-center justify-center shadow-lg shadow-[#c9a962]/20">
                   <span className="text-[#0a1628] font-black text-[10px] xl:text-xs">PAI</span>
                 </div>
-                <h1 className="text-white font-semibold text-sm xl:text-base">Investor Personality Assessment</h1>
+                <h1 className="text-white font-semibold text-sm xl:text-base">{t('assessment.header.title')}</h1>
               </div>
 
               <div className="flex items-center gap-2 sm:gap-3">
@@ -436,7 +423,7 @@ export default function AssessmentPage() {
                           <CheckIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </div>
                         <span className="mt-1.5 sm:mt-2 text-[9px] sm:text-[11px] font-medium text-[#c9a962]">
-                          {language === 'zh' ? stageItem.label.zh : stageItem.label.en}
+                          {t(stageItem.labelKey)}
                         </span>
                       </div>
                     ))}
@@ -566,10 +553,10 @@ export default function AssessmentPage() {
                                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                                 </svg>
                               </span>
-                              {language === 'zh' ? '優勢' : 'Strengths'}
+                              {t('result.mbti.strengths')}
                             </h4>
                             <ul className="space-y-1.5 sm:space-y-2">
-                              {(language === 'zh' ? investorMBTI.strengths : (investorMBTI.strengths_en || investorMBTI.strengths))?.map((item, idx) => (
+                              {investorMBTI.strengths?.map((item, idx) => (
                                 <li key={idx} className="text-xs sm:text-sm text-[#0a1628]/75 flex items-start gap-2">
                                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-700/70 mt-1.5 flex-shrink-0" />
                                   <span className="flex-1 leading-relaxed">{item}</span>
@@ -587,10 +574,10 @@ export default function AssessmentPage() {
                                   <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
                                 </svg>
                               </span>
-                              {language === 'zh' ? '盲點' : 'Blind Spots'}
+                              {t('result.mbti.blindSpots')}
                             </h4>
                             <ul className="space-y-1.5 sm:space-y-2">
-                              {(language === 'zh' ? investorMBTI.blind_spots : (investorMBTI.blind_spots_en || investorMBTI.blind_spots))?.map((item, idx) => (
+                              {investorMBTI.blind_spots?.map((item, idx) => (
                                 <li key={idx} className="text-xs sm:text-sm text-[#0a1628]/75 flex items-start gap-2">
                                   <span className="w-1.5 h-1.5 rounded-full bg-amber-700/70 mt-1.5 flex-shrink-0" />
                                   <span className="flex-1 leading-relaxed">{item}</span>
@@ -676,7 +663,7 @@ export default function AssessmentPage() {
               <div className="w-9 h-9 xl:w-10 xl:h-10 rounded-xl bg-gradient-to-br from-[#c9a962] to-[#d4b87a] flex items-center justify-center shadow-lg shadow-[#c9a962]/20">
                 <span className="text-[#0a1628] font-black text-[10px] xl:text-xs">PAI</span>
               </div>
-              <h1 className="text-white font-semibold text-sm xl:text-base">Investor Personality Assessment</h1>
+              <h1 className="text-white font-semibold text-sm xl:text-base">{t('assessment.header.title')}</h1>
             </div>
 
             <div className="flex items-center gap-2 sm:gap-3">
@@ -749,7 +736,7 @@ export default function AssessmentPage() {
                                 : 'text-gray-500'
                             }`}
                         >
-                          {language === 'zh' ? stageItem.label.zh : stageItem.label.en}
+                          {t(stageItem.labelKey)}
                         </span>
                       </div>
                     );
@@ -861,7 +848,7 @@ export default function AssessmentPage() {
             {isComplete && isLoadingResult && (
               <div className="text-center py-8 sm:py-12">
                 <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 border-4 border-[#1a2744] border-t-[#c9a962] rounded-full animate-spin"></div>
-                <p className="text-gray-400 font-medium text-sm sm:text-base">Analyzing your personality...</p>
+                <p className="text-gray-400 font-medium text-sm sm:text-base">{t('common.loading')}</p>
               </div>
             )}
 
