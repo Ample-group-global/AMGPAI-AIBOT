@@ -13,7 +13,7 @@ import { DynamicIcon } from '@/components/DynamicIcon';
 
 export default function Home() {
   const router = useRouter();
-  const { language, setLanguage, languages, t, isLoading: isMasterDataLoading, error, reload } = useMasterData();
+  const { language, setLanguage, languages, t, isLoading: isMasterDataLoading } = useMasterData();
   const { isAuthenticated, isLoading: isAuthLoading, sendOtp: authSendOtp, login } = useAuth();
   const isLoading = isMasterDataLoading || isAuthLoading;
 
@@ -210,27 +210,6 @@ export default function Home() {
           <div className="mt-4 sm:mt-6 text-gray-400 animate-pulse">
             <p className="text-sm sm:text-base">載入中...</p>
             <p className="text-xs sm:text-sm">Loading...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen gradient-mesh flex items-center justify-center px-4">
-        <div className="text-center max-w-md">
-          <div className="mb-6 sm:mb-8">
-            <Image src="/logo.png" alt="Ample Group Global" width={160} height={40} className="object-contain mx-auto sm:w-[200px] sm:h-[50px]" />
-          </div>
-          <div className="p-6 rounded-xl bg-[#1a2744]/80 border border-[#334155]">
-            <p className="text-red-400 text-sm sm:text-base mb-4">{error}</p>
-            <button
-              onClick={reload}
-              className="px-6 py-2.5 bg-gradient-to-r from-[#c9a962] to-[#d4b87a] rounded-lg text-[#0a1628] font-bold text-sm hover:shadow-lg transition-all"
-            >
-              Retry / 重試
-            </button>
           </div>
         </div>
       </div>

@@ -125,10 +125,10 @@ function getStageIndex(currentStage: string): number {
 export default function AssessmentPage() {
   const router = useRouter();
   const config = defaultConfig;
-  const { language, setLanguage, languages, t, stages, isLoading: isMasterDataLoading } = useMasterData();
+  const { language, setLanguage, languages, t, isLoading: isMasterDataLoading } = useMasterData();
 
   const getStageName = (stageKey: string): string => {
-    const mbtiStageNames: Record<string, { en: string; zh: string }> = {
+    const stageNames: Record<string, { en: string; zh: string }> = {
       welcome: { en: 'Welcome', zh: '欢迎' },
       compliance_nationality: { en: 'Nationality Check', zh: '国籍确认' },
       compliance_qualification: { en: 'Qualification Check', zh: '资格确认' },
@@ -140,17 +140,8 @@ export default function AssessmentPage() {
       complete: { en: 'Complete', zh: '完成' },
       rejected: { en: 'Assessment Ended', zh: '评估结束' },
     };
-
-    if (stages[stageKey]?.name) {
-      return stages[stageKey].name;
-    }
-
-    const fallback = mbtiStageNames[stageKey];
-    if (fallback) {
-      return language === 'zh' ? fallback.zh : fallback.en;
-    }
-
-    return stageKey;
+    const stage = stageNames[stageKey];
+    return stage ? (language === 'zh' ? stage.zh : stage.en) : stageKey;
   };
 
   const { user, isAuthenticated, isLoading: isAuthLoading, logout: authLogout } = useAuth();
