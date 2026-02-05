@@ -1,8 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { useTranslations } from 'next-intl';
 import { locales, defaultLocale, localeLabels, type Locale } from '@/i18n/config';
+import { fetchTranslations, clearTranslationCache } from '@/services/translation-service';
 
 interface LanguageDto {
   code: string;
@@ -20,6 +20,7 @@ interface MasterDataContextType {
   isLoading: boolean;
   t: (key: string) => string;
   getAppTitle: () => string;
+  refreshTranslations: () => Promise<void>;
 }
 
 const MasterDataContext = createContext<MasterDataContextType | undefined>(undefined);
@@ -35,35 +36,69 @@ function setLocaleCookie(locale: Locale) {
   document.cookie = `locale=${locale}; path=/; max-age=31536000; SameSite=Lax`;
 }
 
+function getNestedValue(obj: Record<string, unknown>, path: string): string | undefined {
+  const keys = path.split('.');
+  let current: unknown = obj;
+
+  for (const key of keys) {
+    if (current && typeof current === 'object' && key in current) {
+      current = (current as Record<string, unknown>)[key];
+    } else {
+      return undefined;
+    }
+  }
+
+  return typeof current === 'string' ? current : undefined;
+}
+
 export function MasterDataProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<string>(defaultLocale);
   const [isLoading, setIsLoading] = useState(true);
-  const tIntl = useTranslations();
+  const [dbTranslations, setDbTranslations] = useState<Record<string, unknown> | null>(null);
+
+  const loadTranslations = useCallback(async (locale: string) => {
+    try {
+      const translations = await fetchTranslations(locale);
+      if (translations) {
+        setDbTranslations(translations);
+      }
+    } catch (error) {
+      console.warn('Failed to load translations from API', error);
+    }
+  }, []);
 
   useEffect(() => {
     const locale = getLocaleFromCookie();
     setLanguageState(locale);
-    setIsLoading(false);
-  }, []);
+    loadTranslations(locale).finally(() => {
+      setIsLoading(false);
+    });
+  }, [loadTranslations]);
 
   const setLanguage = useCallback((lang: string) => {
     if (!locales.includes(lang as Locale)) return;
     setLocaleCookie(lang as Locale);
     setLanguageState(lang);
+    clearTranslationCache(lang);
     window.location.reload();
   }, []);
 
   const t = useCallback((key: string): string => {
-    try {
-      return tIntl(key as any);
-    } catch {
-      return key;
+    if (dbTranslations) {
+      const dbValue = getNestedValue(dbTranslations, key);
+      if (dbValue) return dbValue;
     }
-  }, [tIntl]);
+    return key;
+  }, [dbTranslations]);
 
   const getAppTitle = useCallback((): string => {
-    return language === 'zh' ? '投資性向評估' : 'Investment Propensity Assessment';
-  }, [language]);
+    return t('home.header.title');
+  }, [t]);
+
+  const refreshTranslations = useCallback(async () => {
+    clearTranslationCache(language);
+    await loadTranslations(language);
+  }, [language, loadTranslations]);
 
   const languages: LanguageDto[] = locales.map((code, index) => ({
     code,
@@ -75,7 +110,15 @@ export function MasterDataProvider({ children }: { children: ReactNode }) {
   }));
 
   return (
-    <MasterDataContext.Provider value={{ language, setLanguage, languages, isLoading, t, getAppTitle }}>
+    <MasterDataContext.Provider value={{
+      language,
+      setLanguage,
+      languages,
+      isLoading,
+      t,
+      getAppTitle,
+      refreshTranslations
+    }}>
       {children}
     </MasterDataContext.Provider>
   );
