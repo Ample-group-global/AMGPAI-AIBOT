@@ -1,9 +1,148 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { paibotApi, MasterDataDto, LanguageDto, AssessmentStageDto, AppConfigDto } from '@/services/paibot-api';
+import { useTranslations } from 'next-intl';
+import { locales, defaultLocale, localeLabels, type Locale } from '@/i18n/config';
+
+// =============================================================================
+// NEW IMPLEMENTATION: Using next-intl for translations (cookie-based)
+// The old database-based translation system is commented out below but preserved
+// =============================================================================
+
+interface LanguageDto {
+  code: string;
+  name: string;
+  nativeName: string;
+  flag: string;
+  isDefault: boolean;
+  sortOrder: number;
+}
 
 interface MasterDataContextType {
+  masterData: null; // Simplified - no longer fetching from API
+  language: string;
+  setLanguage: (lang: string) => void;
+  languages: LanguageDto[];
+  isLoading: boolean;
+  error: string | null;
+  t: (key: string) => string;
+  reload: () => Promise<void>;
+  config: null; // Simplified
+  stages: Record<string, { name: string }>;
+  getAppTitle: () => string;
+}
+
+const MasterDataContext = createContext<MasterDataContextType | undefined>(undefined);
+
+interface MasterDataProviderProps {
+  children: ReactNode;
+}
+
+// Helper to get locale from cookie (client-side)
+function getLocaleFromCookie(): Locale {
+  if (typeof document === 'undefined') return defaultLocale;
+  const match = document.cookie.match(/(?:^|; )locale=([^;]*)/);
+  const cookieValue = match ? decodeURIComponent(match[1]) : null;
+  return locales.includes(cookieValue as Locale) ? (cookieValue as Locale) : defaultLocale;
+}
+
+// Helper to set locale cookie
+function setLocaleCookie(locale: Locale) {
+  document.cookie = `locale=${locale}; path=/; max-age=31536000; SameSite=Lax`;
+}
+
+export function MasterDataProvider({ children }: MasterDataProviderProps) {
+  const [language, setLanguageState] = useState<string>(defaultLocale);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Get translations from next-intl
+  const tIntl = useTranslations();
+
+  // Initialize language from cookie on mount
+  useEffect(() => {
+    const locale = getLocaleFromCookie();
+    setLanguageState(locale);
+    setIsLoading(false);
+  }, []);
+
+  // Language switching - sets cookie and reloads page
+  const setLanguage = useCallback((lang: string) => {
+    if (!locales.includes(lang as Locale)) return;
+    setLocaleCookie(lang as Locale);
+    setLanguageState(lang);
+    // Reload to get new translations from server
+    window.location.reload();
+  }, []);
+
+  // Translation function using next-intl
+  const t = useCallback((key: string): string => {
+    try {
+      // next-intl uses dot notation, so we can pass the key directly
+      return tIntl(key as any);
+    } catch {
+      // Fallback: return the key itself if translation not found
+      return key;
+    }
+  }, [tIntl]);
+
+  const reload = useCallback(async () => {
+    // No-op for new implementation - translations come from JSON files
+  }, []);
+
+  const getAppTitle = useCallback((): string => {
+    return language === 'zh' ? '投資性向評估' : 'Investment Propensity Assessment';
+  }, [language]);
+
+  // Build languages array from config
+  const languages: LanguageDto[] = locales.map((code, index) => ({
+    code,
+    name: localeLabels[code].name,
+    nativeName: localeLabels[code].nativeName,
+    flag: localeLabels[code].flag,
+    isDefault: code === defaultLocale,
+    sortOrder: index + 1,
+  }));
+
+  // Stage names (can be extended or fetched if needed)
+  const stages: Record<string, { name: string }> = {};
+
+  const value: MasterDataContextType = {
+    masterData: null,
+    language,
+    setLanguage,
+    languages,
+    isLoading,
+    error: null,
+    t,
+    reload,
+    config: null,
+    stages,
+    getAppTitle,
+  };
+
+  return (
+    <MasterDataContext.Provider value={value}>
+      {children}
+    </MasterDataContext.Provider>
+  );
+}
+
+export function useMasterData() {
+  const context = useContext(MasterDataContext);
+  if (context === undefined) {
+    throw new Error('useMasterData must be used within a MasterDataProvider');
+  }
+  return context;
+}
+
+// =============================================================================
+// OLD IMPLEMENTATION (PRESERVED BUT UNPLUGGED)
+// This was the database-based translation system. Keeping for reference.
+// =============================================================================
+/*
+import { paibotApi, MasterDataDto, LanguageDto, AssessmentStageDto, AppConfigDto } from '@/services/paibot-api';
+
+interface MasterDataContextTypeOld {
   masterData: MasterDataDto | null;
   language: string;
   setLanguage: (lang: string) => void;
@@ -17,13 +156,7 @@ interface MasterDataContextType {
   getAppTitle: () => string;
 }
 
-const MasterDataContext = createContext<MasterDataContextType | undefined>(undefined);
-
-interface MasterDataProviderProps {
-  children: ReactNode;
-}
-
-export function MasterDataProvider({ children }: MasterDataProviderProps) {
+export function MasterDataProviderOld({ children }: MasterDataProviderProps) {
   const [masterData, setMasterData] = useState<MasterDataDto | null>(null);
   const [language, setLanguageState] = useState<string>('zh');
   const [isLoading, setIsLoading] = useState(true);
@@ -99,7 +232,7 @@ export function MasterDataProvider({ children }: MasterDataProviderProps) {
   const config = masterData?.config || null;
   const stages = masterData?.stages || {};
 
-  const value: MasterDataContextType = {
+  const value: MasterDataContextTypeOld = {
     masterData,
     language,
     setLanguage,
@@ -119,11 +252,4 @@ export function MasterDataProvider({ children }: MasterDataProviderProps) {
     </MasterDataContext.Provider>
   );
 }
-
-export function useMasterData() {
-  const context = useContext(MasterDataContext);
-  if (context === undefined) {
-    throw new Error('useMasterData must be used within a MasterDataProvider');
-  }
-  return context;
-}
+*/
