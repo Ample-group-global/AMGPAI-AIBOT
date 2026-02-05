@@ -1,5 +1,3 @@
-// PAIBot Configuration
-
 export interface PAIBotConfig {
   authApiUrl: string;
   assessmentApiUrl: string;

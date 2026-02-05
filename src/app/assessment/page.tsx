@@ -98,7 +98,6 @@ async function sendChat(apiUrl: string, sessionId: string, message: string, lang
 }
 
 
-// MBTI Assessment Stages
 const ASSESSMENT_STAGES = [
   { key: 'welcome', icon: '1', label: { en: 'Start', zh: '开始' } },
   { key: 'compliance', icon: '2', label: { en: 'Verify', zh: '验证' } },
@@ -181,13 +180,12 @@ export default function AssessmentPage() {
     }
   }, [isAuthLoading, isAuthenticated, router]);
 
-  // Track the language used to start the session
+
   const sessionLanguageRef = useRef<string | null>(null);
 
-  // Reset session when language changes
+
   useEffect(() => {
     if (sessionId && sessionLanguageRef.current && sessionLanguageRef.current !== language) {
-      // Language changed, reset session to restart with new language
       setSessionId(null);
       setMessages([]);
       setProgress(0);
@@ -209,7 +207,7 @@ export default function AssessmentPage() {
         .then((response) => {
           if (response.success && response.data) {
             setSessionId(response.data.sessionId);
-            sessionLanguageRef.current = language; // Track the language used for this session
+            sessionLanguageRef.current = language;
             setMessages([{ role: 'assistant', content: response.data.question }]);
             setProgress(response.data.progress);
             setStage(response.data.stage);
@@ -234,7 +232,6 @@ export default function AssessmentPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Fetch result when assessment is complete
   useEffect(() => {
     if (isComplete && sessionId && !assessmentResult && !isLoadingResult) {
       setIsLoadingResult(true);
@@ -244,7 +241,7 @@ export default function AssessmentPage() {
             setAssessmentResult(response.data);
           }
         })
-        .catch(() => {})
+        .catch(() => { })
         .finally(() => {
           setIsLoadingResult(false);
         });
@@ -267,7 +264,6 @@ export default function AssessmentPage() {
       const response = await sendChat(config.assessmentApiUrl, sessionId, option, language);
 
       if (response.success && response.data) {
-        // Track question numbering for personality dimension stages
         const isDimensionStage = response.data.stage.startsWith('dimension_');
         const hasOptions = response.data.options && response.data.options.length > 0;
         let questionLabel: string | undefined;
@@ -322,7 +318,6 @@ export default function AssessmentPage() {
     setOptions([]);
     setIsStarting(false);
     personalityQuestionCount.current = 0;
-    // The useEffect will automatically start a new session
   };
 
   if (isAuthLoading || isMasterDataLoading) {
@@ -349,11 +344,9 @@ export default function AssessmentPage() {
 
   const investorMBTI = assessmentResult?.scores?.investor_mbti;
 
-  // Render Result View
   if (isComplete && assessmentResult) {
     return (
       <div key="result" className="min-h-screen bg-[#0a1628]">
-        {/* Alert Dialog for Close */}
         <AlertDialog open={showCloseDialog} onOpenChange={setShowCloseDialog}>
           <AlertDialogContent className="bg-gradient-to-br from-[#1a2744] to-[#0a1628] border-[#334155] text-white max-w-[90vw] sm:max-w-sm rounded-2xl mx-4">
             <AlertDialogHeader>
@@ -378,7 +371,6 @@ export default function AssessmentPage() {
           </AlertDialogContent>
         </AlertDialog>
 
-        {/* Header with Stage Progress */}
         <header className="border-b border-white/5 bg-[#0a1628]/95 backdrop-blur-xl sticky top-0 z-20">
           <div className="container px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
             {/* Top Row */}
@@ -393,7 +385,6 @@ export default function AssessmentPage() {
                 />
               </div>
 
-              {/* Center Title - Hidden on mobile */}
               <div className="hidden lg:flex items-center gap-3">
                 <div className="w-9 h-9 xl:w-10 xl:h-10 rounded-xl bg-gradient-to-br from-[#c9a962] to-[#d4b87a] flex items-center justify-center shadow-lg shadow-[#c9a962]/20">
                   <span className="text-[#0a1628] font-black text-[10px] xl:text-xs">PAI</span>
@@ -429,19 +420,15 @@ export default function AssessmentPage() {
               </div>
             </div>
 
-            {/* Stage Progress - Completed State */}
             <div className="mt-4 sm:mt-5">
               <div className="bg-[#1a2744]/40 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-[#334155]/30">
                 <div className="relative px-2 sm:px-4">
-                  {/* Progress Line Background */}
                   <div className="absolute top-[16px] sm:top-[20px] left-6 sm:left-10 right-6 sm:right-10 h-1 bg-[#0a1628] rounded-full" />
-                  {/* Progress Line Active - Full width for completed */}
                   <div
                     className="absolute top-[16px] sm:top-[20px] left-6 sm:left-10 h-1 bg-gradient-to-r from-[#c9a962] to-[#d4b87a] rounded-full transition-all duration-700 ease-out"
                     style={{ width: 'calc(100% - 48px)' }}
                   />
 
-                  {/* Stage Indicators */}
                   <div className="relative flex justify-between">
                     {ASSESSMENT_STAGES.map((stageItem, index) => (
                       <div key={stageItem.key} className="flex flex-col items-center relative z-10">
@@ -456,9 +443,7 @@ export default function AssessmentPage() {
                   </div>
                 </div>
 
-                {/* Current Stage Indicator + Progress Bar */}
                 <div className="flex items-center justify-between gap-3 mt-3 pt-3 border-t border-[#334155]/30">
-                  {/* Left Side - Current Stage Name */}
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#c9a962] shadow-lg shadow-[#c9a962]/50"></span>
                     <span className="text-xs sm:text-sm font-semibold text-white">
@@ -466,7 +451,6 @@ export default function AssessmentPage() {
                     </span>
                   </div>
 
-                  {/* Right Side - Progress Bar */}
                   <div className="flex items-center gap-3">
                     <div className="w-[100px] sm:w-[180px] h-1.5 bg-[#0a1628] rounded-full overflow-hidden">
                       <div className="h-full bg-gradient-to-r from-[#c9a962] to-[#d4b87a] rounded-full w-full" />
@@ -479,14 +463,11 @@ export default function AssessmentPage() {
           </div>
         </header>
 
-        {/* Result Content */}
         <main className="container px-3 sm:px-4 lg:px-6 max-w-5xl py-4 sm:py-6 md:py-8 lg:py-10">
           {investorMBTI?.type_code ? (
             <div className="space-y-4 sm:space-y-6">
-              {/* MBTI Result Card */}
               <div className="rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#c9a962] via-[#d4b87a] to-[#c9a962] p-0.5 sm:p-1 shadow-2xl shadow-[#c9a962]/20">
                 <div className="rounded-[14px] sm:rounded-[22px] bg-gradient-to-br from-[#c9a962] to-[#d4b87a] p-4 sm:p-6 md:p-8">
-                  {/* Type Header */}
                   <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 mb-6 sm:mb-8 text-center sm:text-left">
                     <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-2xl sm:rounded-3xl bg-[#0a1628] flex items-center justify-center shadow-2xl flex-shrink-0 ring-4 ring-[#0a1628]/20">
                       <span className="text-3xl sm:text-4xl md:text-5xl font-black text-[#c9a962] tracking-wider">{investorMBTI.type_code}</span>
@@ -501,7 +482,6 @@ export default function AssessmentPage() {
                     </div>
                   </div>
 
-                  {/* Four Dimensions - Horizontal 2x2 Grid */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6 sm:mb-8">
                     {(['gs', 'di', 'lv', 'pa'] as const).map((dim) => {
                       const dimension = MBTI_DIMENSIONS[dim];
@@ -510,23 +490,15 @@ export default function AssessmentPage() {
 
                       const isRight = data.letter === dimension.rightLetter;
                       const rawScore = data.score ?? 0;
-                      // API returns score as 0, 1, or 2 (count of right-side answers out of 2 questions per dimension)
-                      // 0 = both answers left, 1 = mixed, 2 = both answers right
-                      // Normalize to percentage: (score / 2) * 100
                       const normalizedPercent = (rawScore / 2) * 100;
-                      // Tendency strength: how strongly user leans towards their result letter
                       const tendencyStrength = isRight ? normalizedPercent : (100 - normalizedPercent);
-                      // Bar fill from dominant side
                       const barFillPercent = isRight ? normalizedPercent : (100 - normalizedPercent);
-                      // Minimum visible fill
                       const displayFill = Math.max(barFillPercent, 15);
 
                       return (
                         <div key={dim} className="bg-[#0a1628]/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3.5 sm:p-5 relative overflow-hidden">
-                          {/* Subtle accent line on dominant side */}
                           <div className={`absolute top-0 ${isRight ? 'right-0' : 'left-0'} w-1 h-full bg-[#0a1628]/30 rounded-full`} />
 
-                          {/* Header: Label + Letter Badge */}
                           <div className="flex items-center justify-between mb-3 sm:mb-4">
                             <h4 className="text-xs sm:text-sm font-bold text-[#0a1628]">
                               {language === 'zh' ? dimension.labelZh : dimension.labelEn}
@@ -538,12 +510,9 @@ export default function AssessmentPage() {
                             </div>
                           </div>
 
-                          {/* Bipolar Scale Bar */}
                           <div className="mb-2">
                             <div className="relative h-2.5 sm:h-3 bg-[#0a1628]/15 rounded-full overflow-hidden">
-                              {/* Center marker */}
                               <div className="absolute left-1/2 top-0 w-px h-full bg-[#0a1628]/20 z-10" />
-                              {/* Fill bar - direction based on dominant side */}
                               {isRight ? (
                                 <div
                                   className="absolute right-0 top-0 h-full bg-gradient-to-l from-[#0a1628]/70 to-[#0a1628]/30 rounded-full transition-all duration-700"
@@ -558,7 +527,6 @@ export default function AssessmentPage() {
                             </div>
                           </div>
 
-                          {/* Scale Labels - Left & Right */}
                           <div className="flex justify-between items-center">
                             <div className={`flex items-center gap-1 sm:gap-1.5 ${!isRight ? '' : 'opacity-40'}`}>
                               <span className={`w-5 h-5 sm:w-6 sm:h-6 rounded-md flex items-center justify-center text-[10px] sm:text-xs font-bold ${!isRight ? 'bg-[#0a1628] text-[#c9a962]' : 'bg-[#0a1628]/15 text-[#0a1628]/50'}`}>
@@ -569,7 +537,6 @@ export default function AssessmentPage() {
                               </span>
                             </div>
 
-                            {/* Tendency Percentage */}
                             <span className="text-xs sm:text-sm font-bold text-[#0a1628]/70">
                               {tendencyStrength}%
                             </span>
@@ -588,7 +555,6 @@ export default function AssessmentPage() {
                     })}
                   </div>
 
-                  {/* Strengths & Blind Spots */}
                   {((investorMBTI.strengths && investorMBTI.strengths.length > 0) ||
                     (investorMBTI.blind_spots && investorMBTI.blind_spots.length > 0)) && (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
@@ -638,7 +604,6 @@ export default function AssessmentPage() {
                 </div>
               </div>
 
-              {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 pt-2 sm:pt-4 pb-4 sm:pb-6">
                 <Button
                   variant="outline"
@@ -656,7 +621,6 @@ export default function AssessmentPage() {
               </div>
             </div>
           ) : (
-            // Loading result
             <div className="flex items-center justify-center py-16 sm:py-20">
               <div className="text-center">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto border-4 border-[#1a2744] border-t-[#c9a962] rounded-full animate-spin mb-3 sm:mb-4"></div>
@@ -695,12 +659,9 @@ export default function AssessmentPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Header */}
       <header className="border-b border-white/5 bg-[#0a1628]/95 backdrop-blur-xl sticky top-0 z-20">
         <div className="container px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
-          {/* Top Row - Logo, Title, Language */}
           <div className="flex items-center justify-between">
-            {/* Logo */}
             <div className="flex items-center gap-2 sm:gap-3">
               <Image
                 src="/logo.png"
@@ -711,7 +672,6 @@ export default function AssessmentPage() {
               />
             </div>
 
-            {/* Center Title - Hidden on mobile/tablet */}
             <div className="hidden lg:flex items-center gap-3">
               <div className="w-9 h-9 xl:w-10 xl:h-10 rounded-xl bg-gradient-to-br from-[#c9a962] to-[#d4b87a] flex items-center justify-center shadow-lg shadow-[#c9a962]/20">
                 <span className="text-[#0a1628] font-black text-[10px] xl:text-xs">PAI</span>
@@ -719,7 +679,6 @@ export default function AssessmentPage() {
               <h1 className="text-white font-semibold text-sm xl:text-base">Investor Personality Assessment</h1>
             </div>
 
-            {/* Language & Exit */}
             <div className="flex items-center gap-2 sm:gap-3">
               {config.showLanguageSwitcher && (
                 <div className="flex rounded-lg sm:rounded-xl overflow-hidden border border-[#334155] bg-[#1a2744]/50 h-8 sm:h-10">
@@ -751,20 +710,15 @@ export default function AssessmentPage() {
             </div>
           </div>
 
-          {/* Progress Section - Improved Design */}
           <div className="mt-4 sm:mt-5">
             <div className="bg-[#1a2744]/40 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-[#334155]/30">
-              {/* Stage Progress Track */}
               <div className="relative px-2 sm:px-4">
-                {/* Progress Line Background */}
                 <div className="absolute top-[16px] sm:top-[20px] left-6 sm:left-10 right-6 sm:right-10 h-1 bg-[#0a1628] rounded-full" />
-                {/* Progress Line Active */}
                 <div
                   className="absolute top-[16px] sm:top-[20px] left-6 sm:left-10 h-1 bg-gradient-to-r from-[#c9a962] to-[#d4b87a] rounded-full transition-all duration-700 ease-out"
                   style={{ width: `calc(${Math.max(0, (currentStageIndex / (ASSESSMENT_STAGES.length - 1)) * 100)}% - 24px)` }}
                 />
 
-                {/* Stage Indicators */}
                 <div className="relative flex justify-between">
                   {ASSESSMENT_STAGES.map((stageItem, index) => {
                     const isCompleted = currentStageIndex > index;
@@ -773,7 +727,6 @@ export default function AssessmentPage() {
 
                     return (
                       <div key={stageItem.key} className="flex flex-col items-center relative z-10">
-                        {/* Stage Circle */}
                         <div
                           className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold transition-all duration-500 ${isRejected && index > 1
                             ? 'bg-[#1a2744] text-gray-600 border-2 border-[#334155]'
@@ -786,7 +739,6 @@ export default function AssessmentPage() {
                         >
                           {isCompleted ? <CheckIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> : stageItem.icon}
                         </div>
-                        {/* Stage Label */}
                         <span
                           className={`mt-1.5 sm:mt-2 text-[9px] sm:text-[11px] font-medium transition-all duration-300 ${isRejected && index > 1
                             ? 'text-gray-600'
@@ -805,9 +757,7 @@ export default function AssessmentPage() {
                 </div>
               </div>
 
-              {/* Current Stage Name + Progress Bar */}
               <div className="flex items-center justify-between gap-3 mt-3 pt-3 border-t border-[#334155]/30">
-                {/* Left Side - Current Stage Name */}
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#c9a962] shadow-lg shadow-[#c9a962]/50 animate-pulse"></span>
                   <span className="text-xs sm:text-sm font-semibold text-white">
@@ -815,7 +765,6 @@ export default function AssessmentPage() {
                   </span>
                 </div>
 
-                {/* Right Side - Progress Bar */}
                 <div className="flex items-center gap-3">
                   <div className="w-[100px] sm:w-[180px] h-1.5 bg-[#0a1628] rounded-full overflow-hidden">
                     <div
@@ -831,7 +780,6 @@ export default function AssessmentPage() {
         </div>
       </header>
 
-      {/* Main Chat Area */}
       <main
         ref={chatContainerRef}
         onScroll={handleScroll}
@@ -856,7 +804,6 @@ export default function AssessmentPage() {
                   )}
                 </div>
                 <div className={`max-w-[85%] sm:max-w-[80%] md:max-w-[75%] ${msg.role === 'user' ? 'text-right' : ''}`}>
-                  {/* Question Number Badge */}
                   {msg.questionLabel && (
                     <div className="mb-1.5">
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#c9a962]/15 border border-[#c9a962]/30 text-[#c9a962] text-[10px] sm:text-xs font-bold">
@@ -876,7 +823,6 @@ export default function AssessmentPage() {
               </div>
             ))}
 
-            {/* Option Buttons */}
             {options.length > 0 && !isSending && (
               <div className="flex flex-col gap-2 sm:gap-3 pl-10 sm:pl-13 pt-2 sm:pt-3">
                 {options.map((option, idx) => (
@@ -897,7 +843,6 @@ export default function AssessmentPage() {
               </div>
             )}
 
-            {/* Loading Indicator */}
             {isSending && (
               <div className="flex gap-2 sm:gap-3">
                 <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-[#c9a962] to-[#d4b87a] flex items-center justify-center shadow-lg shadow-[#c9a962]/20">
@@ -913,7 +858,6 @@ export default function AssessmentPage() {
               </div>
             )}
 
-            {/* Loading Result State */}
             {isComplete && isLoadingResult && (
               <div className="text-center py-8 sm:py-12">
                 <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 border-4 border-[#1a2744] border-t-[#c9a962] rounded-full animate-spin"></div>
@@ -925,7 +869,6 @@ export default function AssessmentPage() {
           </div>
         </div>
 
-        {/* Scroll to Bottom Button */}
         {showScrollButton && (
           <button
             onClick={scrollToBottom}

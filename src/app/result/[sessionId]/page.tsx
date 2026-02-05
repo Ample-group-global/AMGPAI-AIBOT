@@ -91,7 +91,6 @@ export default function ResultPage() {
   const { investorProfile, scores } = result;
   const investorMBTI = scores.investor_mbti;
 
-  // MBTI dimension labels
   const mbtiDimensions = {
     gs: {
       labelZh: '風險取向',
@@ -162,7 +161,6 @@ export default function ResultPage() {
       </header>
 
       <main className="container py-4 sm:py-6 md:py-8 max-w-5xl space-y-4 sm:space-y-6 md:space-y-8 px-3 sm:px-4">
-        {/* MBTI Personality Type Card */}
         {investorMBTI?.type_code && (
           <Card className="p-4 sm:p-6 md:p-8 bg-gradient-to-r from-[#c9a962] to-[#d4b87a] border-0">
             <div className="space-y-4 sm:space-y-6">
@@ -182,7 +180,6 @@ export default function ResultPage() {
                 </div>
               </div>
 
-              {/* Four Dimensions */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 {(['gs', 'di', 'lv', 'pa'] as const).map((dim) => {
                   const dimension = mbtiDimensions[dim];
@@ -191,7 +188,6 @@ export default function ResultPage() {
 
                   const isRight = data.letter === dimension.rightLetter;
                   const rawScore = data.score ?? 0;
-                  // Normalize 0-2 score to percentage: (score / 2) * 100
                   const normalizedPercent = (rawScore / 2) * 100;
                   const percentage = isRight ? normalizedPercent : (100 - normalizedPercent);
 
@@ -224,7 +220,6 @@ export default function ResultPage() {
                 })}
               </div>
 
-              {/* Strengths & Blind Spots */}
               {((investorMBTI.strengths && investorMBTI.strengths.length > 0) ||
                 (investorMBTI.blind_spots && investorMBTI.blind_spots.length > 0)) && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pt-2">
@@ -266,7 +261,6 @@ export default function ResultPage() {
           </Card>
         )}
 
-        {/* Profile Card (Fallback if no MBTI) */}
         {!investorMBTI?.type_code && (
           <Card className="p-4 sm:p-6 md:p-8 bg-gradient-to-r from-[#c9a962] to-[#d4b87a] border-0">
             <div className="space-y-3 sm:space-y-4">
@@ -283,7 +277,6 @@ export default function ResultPage() {
           </Card>
         )}
 
-        {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 pt-4 sm:pt-8">
           <Button
             variant="outline"
