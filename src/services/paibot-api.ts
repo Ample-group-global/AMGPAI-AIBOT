@@ -69,6 +69,7 @@ class PAIBotApiService {
 
       const response = await fetch(`${this.baseUrl}${endpoint}`, {
         signal: controller.signal,
+        credentials: 'include',
       });
       clearTimeout(timeoutId);
 
@@ -103,6 +104,7 @@ class PAIBotApiService {
     try {
       const response = await fetch(`${this.baseUrl}/PAIBotClearCache`, {
         method: 'POST',
+        credentials: 'include',
       });
       const result = await response.json();
       return result.success === true;

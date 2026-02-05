@@ -7,35 +7,15 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { defaultConfig } from '@/config';
 import { useMasterData } from '@/contexts/MasterDataContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { DynamicIcon } from '@/components/DynamicIcon';
-
-const AUTH_TOKEN_KEY = 'paibot_jwt_token';
-const AUTH_USER_KEY = 'paibot_user';
-
-function parseJWT(token: string): { user_id: string; role: string; exp: number } | null {
-  try {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(
-      atob(base64).split('').map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')
-    );
-    return JSON.parse(jsonPayload);
-  } catch {
-    return null;
-  }
-}
-
-function isTokenExpired(token: string): boolean {
-  const payload = parseJWT(token);
-  if (!payload) return true;
-  return Date.now() >= payload.exp * 1000;
-}
 
 export default function Home() {
   const router = useRouter();
-  const { language, setLanguage, languages, t, isLoading, error, reload } = useMasterData();
+  const { language, setLanguage, languages, t, isLoading: isMasterDataLoading, error, reload } = useMasterData();
+  const { isAuthenticated, isLoading: isAuthLoading, sendOtp: authSendOtp, login } = useAuth();
+  const isLoading = isMasterDataLoading || isAuthLoading;
 
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginStep, setLoginStep] = useState<'email' | 'otp'>('email');
@@ -117,14 +97,9 @@ export default function Home() {
   const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const handleStartAssessment = () => {
-    const storedToken = localStorage.getItem(AUTH_TOKEN_KEY);
-    if (storedToken && !isTokenExpired(storedToken)) {
+    if (isAuthenticated) {
       router.push('/assessment');
       return;
-    }
-    if (storedToken) {
-      localStorage.removeItem(AUTH_TOKEN_KEY);
-      localStorage.removeItem(AUTH_USER_KEY);
     }
     setShowLoginModal(true);
   };
@@ -138,29 +113,15 @@ export default function Home() {
 
     setLoginLoading(true);
     try {
-      const response = await fetch(`${defaultConfig.authApiUrl}/AuthPrivy/SendPrivyOtp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-
-      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-
-      const data = await response.json();
-      if (data.isSuccess && data.data?.success) {
+      const result = await authSendOtp(email);
+      if (result.success) {
         setLoginStep('otp');
       } else {
-        setLoginError(data.errorMessage || t('home.login.otpFailed'));
+        setLoginError(result.error || t('home.login.otpFailed'));
       }
     } catch (error) {
       console.error('SendOTP Error:', error);
-      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-      // Check if it's a CORS or network error
-      if (errorMsg.includes('Failed to fetch') || errorMsg.includes('NetworkError')) {
-        setLoginError('Network error - please check if the API server is running (CORS issue)');
-      } else {
-        setLoginError(t('home.login.otpFailed'));
-      }
+      setLoginError(t('home.login.otpFailed'));
     } finally {
       setLoginLoading(false);
     }
@@ -175,34 +136,14 @@ export default function Home() {
 
     setLoginLoading(true);
     try {
-      const response = await fetch(`${defaultConfig.authApiUrl}/AuthPrivy/AuthenticatePrivyOtp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, code: otp }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok || !data.dbResponse?.isSuccess || !data.dbResponse?.data) {
-        const errorMsg = data.dbResponse?.errorMessage || data.message || t('home.login.verifyFailed');
-        throw new Error(errorMsg);
+      const result = await login(email, otp);
+      if (result.success) {
+        setShowLoginModal(false);
+        resetLoginForm();
+        router.push('/assessment');
+      } else {
+        setLoginError(result.error || t('home.login.verifyFailed'));
       }
-
-      const { userId, jwtToken } = data.dbResponse.data;
-      const payload = parseJWT(jwtToken);
-
-      const authUser = {
-        userId: userId,
-        role: payload?.role || 'NA',
-        email: email,
-      };
-
-      localStorage.setItem(AUTH_TOKEN_KEY, jwtToken);
-      localStorage.setItem(AUTH_USER_KEY, JSON.stringify(authUser));
-
-      setShowLoginModal(false);
-      resetLoginForm();
-      router.push('/assessment');
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : t('home.login.verifyFailed');
       setLoginError(errorMessage);

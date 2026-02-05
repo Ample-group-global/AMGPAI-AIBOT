@@ -15,9 +15,10 @@ import {
 } from '@/components/ui/alert-dialog';
 import { defaultConfig } from '@/config';
 import { useMasterData } from '@/contexts/MasterDataContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { DynamicIcon } from '@/components/DynamicIcon';
 import Image from 'next/image';
-import { ApiResponse, InvestorMBTI, AssessmentResult, MBTI_DIMENSIONS, getResult } from '@/types/assessment';
+import { ApiResponse, AssessmentResult, MBTI_DIMENSIONS, getResult } from '@/types/assessment';
 
 const SparklesIcon = ({ className = "h-4 w-4" }: { className?: string }) => (
   <svg className={className} fill="currentColor" viewBox="0 0 24 24">
@@ -41,11 +42,6 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   questionLabel?: string;
-}
-
-interface AuthUser {
-  userId: string;
-  role: string;
 }
 
 interface StartSessionResponse {
@@ -79,6 +75,7 @@ async function apiCall<T>(url: string, options?: RequestInit): Promise<ApiRespon
     const response = await fetch(url, {
       ...options,
       headers: { 'Content-Type': 'application/json', ...options?.headers },
+      credentials: 'include',
     });
     return await response.json() as ApiResponse<T>;
   } catch (error) {
@@ -100,27 +97,6 @@ async function sendChat(apiUrl: string, sessionId: string, message: string, lang
   });
 }
 
-const AUTH_TOKEN_KEY = 'paibot_jwt_token';
-const AUTH_USER_KEY = 'paibot_user';
-
-function parseJWT(token: string): { user_id: string; role: string; exp: number } | null {
-  try {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(
-      atob(base64).split('').map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')
-    );
-    return JSON.parse(jsonPayload);
-  } catch {
-    return null;
-  }
-}
-
-function isTokenExpired(token: string): boolean {
-  const payload = parseJWT(token);
-  if (!payload) return true;
-  return Date.now() >= payload.exp * 1000;
-}
 
 // MBTI Assessment Stages
 const ASSESSMENT_STAGES = [
@@ -177,9 +153,8 @@ export default function AssessmentPage() {
     return stageKey;
   };
 
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, isAuthenticated, isLoading: isAuthLoading, logout: authLogout } = useAuth();
+
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [progress, setProgress] = useState(0);
@@ -195,7 +170,6 @@ export default function AssessmentPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const personalityQuestionCount = useRef(0);
-  const isAuthenticated = !!user && !!token;
 
   const currentStageIndex = getStageIndex(stage);
 
@@ -211,25 +185,16 @@ export default function AssessmentPage() {
   };
 
   useEffect(() => {
-    const storedToken = localStorage.getItem(AUTH_TOKEN_KEY);
-    const storedUser = localStorage.getItem(AUTH_USER_KEY);
-
-    if (storedToken && storedUser && !isTokenExpired(storedToken)) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
-      setIsLoading(false);
-    } else {
-      localStorage.removeItem(AUTH_TOKEN_KEY);
-      localStorage.removeItem(AUTH_USER_KEY);
+    if (!isAuthLoading && !isAuthenticated) {
       router.push('/');
     }
-  }, [router]);
+  }, [isAuthLoading, isAuthenticated, router]);
 
   useEffect(() => {
-    if (!sessionId && isAuthenticated && !isLoading && !isStarting) {
+    if (!sessionId && isAuthenticated && !isAuthLoading && !isStarting) {
       setIsStarting(true);
 
-      startSession(config.assessmentApiUrl, user?.userId || '', language)
+      startSession(config.assessmentApiUrl, user?.id || '', language)
         .then((response) => {
           if (response.success && response.data) {
             setSessionId(response.data.sessionId);
@@ -251,7 +216,7 @@ export default function AssessmentPage() {
           setIsStarting(false);
         });
     }
-  }, [isAuthenticated, user?.userId, isLoading, config.assessmentApiUrl, language, t, sessionId, isStarting]);
+  }, [isAuthenticated, user?.id, isAuthLoading, config.assessmentApiUrl, language, t, sessionId, isStarting]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -274,11 +239,8 @@ export default function AssessmentPage() {
     }
   }, [isComplete, sessionId, assessmentResult, isLoadingResult, config.assessmentApiUrl]);
 
-  const logout = () => {
-    setToken(null);
-    setUser(null);
-    localStorage.removeItem(AUTH_TOKEN_KEY);
-    localStorage.removeItem(AUTH_USER_KEY);
+  const logout = async () => {
+    await authLogout();
     config.onLogout?.();
   };
 
@@ -331,8 +293,8 @@ export default function AssessmentPage() {
   };
 
   const handleClose = () => setShowCloseDialog(true);
-  const handleConfirmClose = () => {
-    logout();
+  const handleConfirmClose = async () => {
+    await logout();
     setShowCloseDialog(false);
     config.onClose?.();
     router.push('/');
@@ -351,7 +313,7 @@ export default function AssessmentPage() {
     // The useEffect will automatically start a new session
   };
 
-  if (isLoading || isMasterDataLoading) {
+  if (isAuthLoading || isMasterDataLoading) {
     return (
       <div className="min-h-screen bg-[#0a1628] flex items-center justify-center p-4">
         <div className="text-center">
