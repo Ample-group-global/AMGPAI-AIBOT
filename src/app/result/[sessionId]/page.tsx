@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
 import { defaultConfig } from '@/config';
 import { useMasterData } from '@/contexts/MasterDataContext';
 import Image from 'next/image';
-import { AssessmentResult, getResult } from '@/types/assessment';
+import { AssessmentResult, getResult, MBTI_DIMENSIONS } from '@/types/assessment';
 
 export default function ResultPage() {
   const params = useParams<{ sessionId: string }>();
@@ -27,7 +27,8 @@ export default function ResultPage() {
     }
 
     setIsLoading(true);
-    getResult(defaultConfig.assessmentApiUrl, sessionId)
+    setError(null);
+    getResult(defaultConfig.assessmentApiUrl, sessionId, language)
       .then((response) => {
         if (response.success && response.data) {
           setResult(response.data);
@@ -41,7 +42,7 @@ export default function ResultPage() {
       .finally(() => {
         setIsLoading(false);
       });
-  }, [sessionId]);
+  }, [sessionId, language]);
 
   const LanguageSwitcher = () => (
     <div className="flex rounded-lg sm:rounded-xl overflow-hidden border border-[#334155] bg-[#1a2744]/50">
@@ -91,54 +92,6 @@ export default function ResultPage() {
   const { investorProfile, scores } = result;
   const investorMBTI = scores.investor_mbti;
 
-  // MBTI dimension labels
-  const mbtiDimensions = {
-    gs: {
-      labelZh: '風險取向',
-      labelEn: 'Risk Orientation',
-      leftZh: '穩健型',
-      leftEn: 'Stability',
-      rightZh: '積極型',
-      rightEn: 'Growth',
-      leftLetter: 'S',
-      rightLetter: 'G',
-      color: 'from-blue-500 to-cyan-400'
-    },
-    di: {
-      labelZh: '分析方法',
-      labelEn: 'Analysis Method',
-      leftZh: '直覺型',
-      leftEn: 'Intuition',
-      rightZh: '數據型',
-      rightEn: 'Data',
-      leftLetter: 'I',
-      rightLetter: 'D',
-      color: 'from-purple-500 to-pink-400'
-    },
-    lv: {
-      labelZh: '決策風格',
-      labelEn: 'Decision Style',
-      leftZh: '價值型',
-      leftEn: 'Values',
-      rightZh: '邏輯型',
-      rightEn: 'Logic',
-      leftLetter: 'V',
-      rightLetter: 'L',
-      color: 'from-orange-500 to-yellow-400'
-    },
-    pa: {
-      labelZh: '行動模式',
-      labelEn: 'Action Mode',
-      leftZh: '適應型',
-      leftEn: 'Adaptive',
-      rightZh: '計劃型',
-      rightEn: 'Planner',
-      leftLetter: 'A',
-      rightLetter: 'P',
-      color: 'from-green-500 to-emerald-400'
-    }
-  };
-
   return (
     <div className="min-h-screen bg-[#0a1628]">
       <header className="border-b border-white/5 bg-[#0a1628]/90 backdrop-blur-xl sticky top-0 z-10">
@@ -162,7 +115,6 @@ export default function ResultPage() {
       </header>
 
       <main className="container py-4 sm:py-6 md:py-8 max-w-5xl space-y-4 sm:space-y-6 md:space-y-8 px-3 sm:px-4">
-        {/* MBTI Personality Type Card */}
         {investorMBTI?.type_code && (
           <Card className="p-4 sm:p-6 md:p-8 bg-gradient-to-r from-[#c9a962] to-[#d4b87a] border-0">
             <div className="space-y-4 sm:space-y-6">
@@ -182,16 +134,14 @@ export default function ResultPage() {
                 </div>
               </div>
 
-              {/* Four Dimensions */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 {(['gs', 'di', 'lv', 'pa'] as const).map((dim) => {
-                  const dimension = mbtiDimensions[dim];
+                  const dimension = MBTI_DIMENSIONS[dim];
                   const data = investorMBTI[dim];
                   if (!data) return null;
 
                   const isRight = data.letter === dimension.rightLetter;
                   const rawScore = data.score ?? 0;
-                  // Normalize 0-2 score to percentage: (score / 2) * 100
                   const normalizedPercent = (rawScore / 2) * 100;
                   const percentage = isRight ? normalizedPercent : (100 - normalizedPercent);
 
@@ -224,7 +174,6 @@ export default function ResultPage() {
                 })}
               </div>
 
-              {/* Strengths & Blind Spots */}
               {((investorMBTI.strengths && investorMBTI.strengths.length > 0) ||
                 (investorMBTI.blind_spots && investorMBTI.blind_spots.length > 0)) && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pt-2">
@@ -232,10 +181,10 @@ export default function ResultPage() {
                     <div className="bg-green-900/20 rounded-xl p-3 sm:p-4">
                       <h4 className="text-sm font-semibold text-[#0a1628] mb-2 flex items-center gap-1">
                         <span>💪</span>
-                        {language === 'zh' ? '優勢' : 'Strengths'}
+                        {t('result.mbti.strengths')}
                       </h4>
                       <ul className="space-y-1">
-                        {(language === 'zh' ? investorMBTI.strengths : (investorMBTI.strengths_en || investorMBTI.strengths))?.map((item, idx) => (
+                        {investorMBTI.strengths?.map((item, idx) => (
                           <li key={idx} className="text-xs sm:text-sm text-[#0a1628]/80 flex items-start gap-1">
                             <span className="text-green-700">•</span>
                             {item}
@@ -248,10 +197,10 @@ export default function ResultPage() {
                     <div className="bg-amber-900/20 rounded-xl p-3 sm:p-4">
                       <h4 className="text-sm font-semibold text-[#0a1628] mb-2 flex items-center gap-1">
                         <span>👁️</span>
-                        {language === 'zh' ? '盲點' : 'Blind Spots'}
+                        {t('result.mbti.blindSpots')}
                       </h4>
                       <ul className="space-y-1">
-                        {(language === 'zh' ? investorMBTI.blind_spots : (investorMBTI.blind_spots_en || investorMBTI.blind_spots))?.map((item, idx) => (
+                        {investorMBTI.blind_spots?.map((item, idx) => (
                           <li key={idx} className="text-xs sm:text-sm text-[#0a1628]/80 flex items-start gap-1">
                             <span className="text-amber-700">•</span>
                             {item}
@@ -266,7 +215,6 @@ export default function ResultPage() {
           </Card>
         )}
 
-        {/* Profile Card (Fallback if no MBTI) */}
         {!investorMBTI?.type_code && (
           <Card className="p-4 sm:p-6 md:p-8 bg-gradient-to-r from-[#c9a962] to-[#d4b87a] border-0">
             <div className="space-y-3 sm:space-y-4">
@@ -283,7 +231,6 @@ export default function ResultPage() {
           </Card>
         )}
 
-        {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 pt-4 sm:pt-8">
           <Button
             variant="outline"

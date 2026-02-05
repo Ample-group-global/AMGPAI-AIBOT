@@ -25,28 +25,21 @@ export default function Home() {
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
   const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
-
-  // Focus first OTP input when step changes to OTP
   useEffect(() => {
     if (loginStep === 'otp' && otpInputRefs.current[0]) {
       setTimeout(() => otpInputRefs.current[0]?.focus(), 100);
     }
   }, [loginStep]);
 
-  // Update combined OTP value when digits change
   useEffect(() => {
     setOtp(otpDigits.join(''));
   }, [otpDigits]);
 
   const handleOtpChange = (index: number, value: string) => {
-    // Only allow single digit
     const digit = value.replace(/\D/g, '').slice(-1);
-
     const newDigits = [...otpDigits];
     newDigits[index] = digit;
     setOtpDigits(newDigits);
-
-    // Auto-advance to next input
     if (digit && index < 5) {
       otpInputRefs.current[index + 1]?.focus();
     }
@@ -55,13 +48,11 @@ export default function Home() {
   const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Backspace') {
       if (!otpDigits[index] && index > 0) {
-        // If current is empty and backspace pressed, go to previous
         otpInputRefs.current[index - 1]?.focus();
         const newDigits = [...otpDigits];
         newDigits[index - 1] = '';
         setOtpDigits(newDigits);
       } else {
-        // Clear current
         const newDigits = [...otpDigits];
         newDigits[index] = '';
         setOtpDigits(newDigits);
@@ -84,7 +75,6 @@ export default function Home() {
         newDigits[i] = pastedData[i] || '';
       }
       setOtpDigits(newDigits);
-      // Focus last filled input or last input
       const lastFilledIndex = Math.min(pastedData.length, 5);
       otpInputRefs.current[lastFilledIndex]?.focus();
     }
@@ -171,11 +161,10 @@ export default function Home() {
         <button
           key={lang.code}
           onClick={() => setLanguage(lang.code)}
-          className={`px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium transition-all duration-300 ${
-            language === lang.code
-              ? 'bg-gradient-to-r from-[#c9a962] to-[#d4b87a] text-[#0a1628]'
-              : 'text-gray-400 hover:text-white hover:bg-white/5'
-          }`}
+          className={`px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium transition-all duration-300 ${language === lang.code
+            ? 'bg-gradient-to-r from-[#c9a962] to-[#d4b87a] text-[#0a1628]'
+            : 'text-gray-400 hover:text-white hover:bg-white/5'
+            }`}
         >
           {lang.code === 'zh' ? '中文' : lang.code.toUpperCase()}
         </button>
@@ -218,21 +207,13 @@ export default function Home() {
 
   return (
     <div className="min-h-screen gradient-mesh relative overflow-hidden noise-overlay">
-      {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Floating orbs */}
         <div className="absolute top-20 left-[10%] w-72 h-72 bg-[#c9a962]/10 rounded-full blur-3xl animate-float"></div>
         <div className="absolute top-40 right-[15%] w-96 h-96 bg-[#c9a962]/5 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }}></div>
         <div className="absolute bottom-20 left-[20%] w-80 h-80 bg-[#1a2744] rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
-
-        {/* Grid pattern */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(201,169,98,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(201,169,98,0.03)_1px,transparent_1px)] bg-[size:64px_64px]"></div>
-
-        {/* Gradient line */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-40 bg-gradient-to-b from-transparent via-[#c9a962]/30 to-transparent"></div>
       </div>
-
-      {/* Login Modal */}
       <Dialog open={showLoginModal} onOpenChange={handleCloseModal}>
         <DialogContent className="w-[92vw] max-w-[420px] mx-auto bg-gradient-to-br from-[#1a2744] to-[#0a1628] border border-[#334155] text-white animate-scale-in shadow-2xl shadow-[#c9a962]/10 rounded-2xl p-6 sm:p-8">
           <div className="absolute inset-0 bg-gradient-to-br from-[#c9a962]/5 to-transparent rounded-2xl pointer-events-none"></div>

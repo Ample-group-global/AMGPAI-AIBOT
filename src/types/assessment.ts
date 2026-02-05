@@ -41,6 +41,7 @@ export interface MBTIDimensionMeta {
   rightEn: string;
   leftLetter: string;
   rightLetter: string;
+  color: string;
 }
 
 export const MBTI_DIMENSIONS: Record<'gs' | 'di' | 'lv' | 'pa', MBTIDimensionMeta> = {
@@ -53,6 +54,7 @@ export const MBTI_DIMENSIONS: Record<'gs' | 'di' | 'lv' | 'pa', MBTIDimensionMet
     rightEn: 'Growth',
     leftLetter: 'S',
     rightLetter: 'G',
+    color: 'from-blue-500 to-cyan-400',
   },
   di: {
     labelZh: '分析方法',
@@ -63,6 +65,7 @@ export const MBTI_DIMENSIONS: Record<'gs' | 'di' | 'lv' | 'pa', MBTIDimensionMet
     rightEn: 'Data',
     leftLetter: 'I',
     rightLetter: 'D',
+    color: 'from-purple-500 to-pink-400',
   },
   lv: {
     labelZh: '決策風格',
@@ -73,6 +76,7 @@ export const MBTI_DIMENSIONS: Record<'gs' | 'di' | 'lv' | 'pa', MBTIDimensionMet
     rightEn: 'Logic',
     leftLetter: 'V',
     rightLetter: 'L',
+    color: 'from-orange-500 to-yellow-400',
   },
   pa: {
     labelZh: '行動模式',
@@ -83,14 +87,16 @@ export const MBTI_DIMENSIONS: Record<'gs' | 'di' | 'lv' | 'pa', MBTIDimensionMet
     rightEn: 'Planner',
     leftLetter: 'A',
     rightLetter: 'P',
+    color: 'from-green-500 to-emerald-400',
   },
 };
 
-export async function getResult(apiUrl: string, sessionId: string): Promise<ApiResponse<AssessmentResult>> {
+export async function getResult(apiUrl: string, sessionId: string, language: string = 'en'): Promise<ApiResponse<AssessmentResult>> {
   try {
-    const response = await fetch(`${apiUrl}/GetResult/${sessionId}`, {
+    const response = await fetch(`${apiUrl}/GetResult/${sessionId}?language=${language}`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
     });
     return await response.json() as ApiResponse<AssessmentResult>;
   } catch (error) {
