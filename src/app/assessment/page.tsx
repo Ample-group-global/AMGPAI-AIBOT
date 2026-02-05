@@ -190,6 +190,26 @@ export default function AssessmentPage() {
     }
   }, [isAuthLoading, isAuthenticated, router]);
 
+  // Track the language used to start the session
+  const sessionLanguageRef = useRef<string | null>(null);
+
+  // Reset session when language changes
+  useEffect(() => {
+    if (sessionId && sessionLanguageRef.current && sessionLanguageRef.current !== language) {
+      // Language changed, reset session to restart with new language
+      setSessionId(null);
+      setMessages([]);
+      setProgress(0);
+      setStage('');
+      setIsComplete(false);
+      setAssessmentResult(null);
+      setOptions([]);
+      setIsStarting(false);
+      personalityQuestionCount.current = 0;
+      sessionLanguageRef.current = null;
+    }
+  }, [language, sessionId]);
+
   useEffect(() => {
     if (!sessionId && isAuthenticated && !isAuthLoading && !isStarting) {
       setIsStarting(true);
@@ -198,6 +218,7 @@ export default function AssessmentPage() {
         .then((response) => {
           if (response.success && response.data) {
             setSessionId(response.data.sessionId);
+            sessionLanguageRef.current = language; // Track the language used for this session
             setMessages([{ role: 'assistant', content: response.data.question }]);
             setProgress(response.data.progress);
             setStage(response.data.stage);
