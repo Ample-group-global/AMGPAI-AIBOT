@@ -75,13 +75,17 @@ export function MasterDataProvider({ children }: { children: ReactNode }) {
     });
   }, [loadTranslations]);
 
-  const setLanguage = useCallback((lang: string) => {
+  const setLanguage = useCallback(async (lang: string) => {
     if (!locales.includes(lang as Locale)) return;
+    if (lang === language) return;
+
     setLocaleCookie(lang as Locale);
     setLanguageState(lang);
+
+    // Load new translations without page reload
     clearTranslationCache(lang);
-    window.location.reload();
-  }, []);
+    await loadTranslations(lang);
+  }, [language, loadTranslations]);
 
   const t = useCallback((key: string): string => {
     if (dbTranslations) {
