@@ -1,0 +1,178 @@
+{
+  "common": {
+    "loading": "Loading..."
+  },
+  "home": {
+    "header": {
+      "title": "Sustainable Investment Assessment"
+    },
+    "hero": {
+      "title": "Discover Your Sustainable Investment Path",
+      "subtitle": "Through AI-powered conversation, understand your investment profile and receive personalized sustainable investment recommendations"
+    },
+    "features": {
+      "risk": {
+        "title": "Risk Assessment",
+        "desc": "Evaluate your risk tolerance and investment capacity",
+        "icon": "chart-bar"
+      },
+      "goals": {
+        "title": "Goal Setting",
+        "desc": "Define your investment objectives and timeline",
+        "icon": "target"
+      },
+      "values": {
+        "title": "Value Alignment",
+        "desc": "Match investments with your ESG values",
+        "icon": "leaf"
+      },
+      "behavior": {
+        "title": "Behavioral Analysis",
+        "desc": "Understand your investment behavior patterns",
+        "icon": "lightbulb"
+      }
+    },
+    "benefits": {
+      "report": {
+        "title": "Detailed Report",
+        "desc": "Receive a comprehensive assessment of your investment profile"
+      },
+      "ai": {
+        "title": "AI-Powered Insights",
+        "desc": "Leverage advanced AI to analyze your investment preferences"
+      },
+      "personalized": {
+        "title": "Personalized Recommendations",
+        "desc": "Get investment suggestions tailored to your unique profile"
+      }
+    },
+    "cta": {
+      "button": "Start Assessment",
+      "time": "Complete in ~10 minutes"
+    },
+    "login": {
+      "title": "Sign In",
+      "subtitle": "Enter your email to receive a verification code",
+      "emailLabel": "Email Address",
+      "emailPlaceholder": "Enter your email",
+      "invalidEmail": "Please enter a valid email address",
+      "sendOtp": "Send Verification Code",
+      "sending": "Sending...",
+      "otpFailed": "Failed to send verification code",
+      "otpTitle": "Enter Verification Code",
+      "otpSubtitle": "We sent a code to",
+      "otpLabel": "Verification Code",
+      "otpPlaceholder": "Enter 6-digit code",
+      "invalidOtp": "Please enter the verification code",
+      "verify": "Verify & Sign In",
+      "verifying": "Verifying...",
+      "verifyFailed": "Verification failed",
+      "resend": "Resend Code",
+      "back": "Back"
+    },
+    "footer": "Sustainable Investment Assessment"
+  },
+  "assessment": {
+    "header": {
+      "title": "Investment Propensity Assessment"
+    },
+    "back": "Back",
+    "chat": {
+      "assistant": "Assistant",
+      "user": "You",
+      "you": "You",
+      "loading": "Loading...",
+      "placeholder": "Enter your answer...",
+      "send": "Send",
+      "error": "We couldn't process your response. Please try again.",
+      "rateLimit": "Our system is currently busy. Please wait a moment and try again."
+    },
+    "complete": {
+      "title": "Assessment Complete!",
+      "subtitle": "Redirecting to your results..."
+    },
+    "close": {
+      "title": "Leave Assessment?",
+      "description": "Your progress will not be saved. Are you sure you want to leave?",
+      "cancel": "Continue",
+      "confirm": "Leave"
+    },
+    "stages": {
+      "welcome": "Welcome",
+      "compliance_nationality": "Nationality Check",
+      "compliance_qualification": "Qualification Check",
+      "dimension_gs": "Risk Orientation",
+      "dimension_di": "Analysis Method",
+      "dimension_lv": "Decision Style",
+      "dimension_pa": "Action Mode",
+      "summary": "Personality Report",
+      "complete": "Complete",
+      "rejected": "Assessment Ended"
+    },
+    "stageLabels": {
+      "start": "Start",
+      "verify": "Verify",
+      "gs": "G/S",
+      "di": "D/I",
+      "lv": "L/V",
+      "pa": "P/A",
+      "result": "Result"
+    }
+  },
+  "result": {
+    "header": {
+      "title": "Assessment Results"
+    },
+    "loading": "Loading results...",
+    "button": {
+      "retake": "Retake Assessment",
+      "home": "Close"
+    },
+    "nav": {
+      "retake": "Retake"
+    },
+    "scores": {
+      "risk": {
+        "title": "Risk Profile",
+        "tolerance": "Risk Tolerance",
+        "horizon": "Time Horizon"
+      },
+      "esg": {
+        "title": "ESG Preferences",
+        "environmental": "Environmental",
+        "social": "Social",
+        "governance": "Governance"
+      }
+    },
+    "tracks": {
+      "title": "Recommended Investment Tracks",
+      "sdg": "Related SDGs",
+      "reason": "Why this track",
+      "match": "Match",
+      "examples": "Examples"
+    },
+    "sdg": {
+      "title": "SDG Alignment"
+    },
+    "error": {
+      "title": "Error Loading Results",
+      "message": "Unable to load your assessment results. Please try again."
+    },
+    "footer": "© 2026 Ample Group Global. All rights reserved.",
+    "mbti": {
+      "strengths": "Strengths",
+      "blindSpots": "Blind Spots"
+    }
+  },
+  "ui": {
+    "icon": {
+      "loading": "loader",
+      "time": "clock",
+      "complete": "check-circle",
+      "user": "user",
+      "check": "check",
+      "error": "x-circle",
+      "assistant": "bot"
+    }
+  }
+}
