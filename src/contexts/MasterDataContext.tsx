@@ -33,16 +33,20 @@ export function MasterDataProvider({ children }: MasterDataProviderProps) {
     setIsLoading(true);
     setError(null);
     try {
+      console.log('[MasterData] Loading data for language:', lang);
       const data = await paibotApi.getMasterData(lang);
       if (data) {
+        console.log('[MasterData] Data loaded successfully');
         setMasterData(data);
         if (data.config?.defaultLanguage && lang === 'zh') {
           setLanguageState(data.config.defaultLanguage);
         }
       } else {
+        console.warn('[MasterData] API returned no data');
         setError('Failed to load data from API');
       }
-    } catch {
+    } catch (err) {
+      console.error('[MasterData] Error loading data:', err);
       setError('Failed to connect to API');
     } finally {
       setIsLoading(false);
@@ -51,6 +55,7 @@ export function MasterDataProvider({ children }: MasterDataProviderProps) {
 
   useEffect(() => {
     loadMasterData(language);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const setLanguage = useCallback((lang: string) => {

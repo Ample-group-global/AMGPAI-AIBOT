@@ -64,15 +64,24 @@ class PAIBotApiService {
     }
 
     try {
-      const response = await fetch(`${this.baseUrl}${endpoint}`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+
       const result: ApiResponse<T> = await response.json();
 
       if (result.success && result.data) {
         this.cache.set(cacheKey, { data: result.data, timestamp: Date.now() });
         return result.data;
       }
+      console.warn('[PAIBot API] Response not successful:', result.error || 'No data');
       return null;
-    } catch {
+    } catch (err) {
+      console.error('[PAIBot API] Fetch failed:', err instanceof Error ? err.message : err);
       return null;
     }
   }
